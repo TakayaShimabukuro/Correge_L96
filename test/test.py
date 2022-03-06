@@ -38,8 +38,9 @@ class RK4:
         return e
     
     def show_glaph(self):
-        plt.plot(self.t, self.u, label="numerical(RK4)")
-        plt.plot(self.t, np.exp(self.t), label="analytical")
+        time = np.arange(0, 2, 0.25)
+        plt.plot(time, self.u, label="numerical(RK4)")
+        plt.plot(time, np.exp(self.t), label="analytical")
         plt.legend()
         plt.show()
 
