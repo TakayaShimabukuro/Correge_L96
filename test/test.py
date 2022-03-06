@@ -1,11 +1,7 @@
 # coding: utf-8
 import numpy as np
 import matplotlib.pyplot as plt
-
-class PlotGlaph:
-    def show_plot():
-        print("a")
-
+    
 class RK4:
     def __init__(self):
         # T-時間, n-分割数, h-一区間の幅, t-グラフのx軸
@@ -38,11 +34,17 @@ class RK4:
     
     def calculate_error(self):
         e = self.v-self.u
+        print(self.v[self.n-1],e[self.n-1],e[self.n-1]/self.v[self.n-1])
         return e
+    
+    def show_glaph(self):
+        plt.plot(self.t, self.u, label="numerical(RK4)")
+        plt.plot(self.t, np.exp(self.t), label="analytical")
+        plt.legend()
+        plt.show()
 
 # インスタンス作成
 rk4 = RK4()
-plotglaph = PlotGlaph()
 
 # 推定値　計算
 data = rk4.calculate_rk4()
@@ -53,4 +55,4 @@ error = rk4.calculate_error()
 print("rk4.calculate_error() finished")
 
 # 出力
-#PlotGlaph(data)
+rk4.show_glaph()
