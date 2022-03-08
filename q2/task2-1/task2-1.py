@@ -3,7 +3,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 from copy import copy
 import os
-
+import math
+import random
+from sklearn.metrics import mean_squared_error
 # パラメータ
 # dN-データ点の個数, dt-幅, F-外力パラメータ, n_step-ステップ数, 2000, 8000, 20000
 
@@ -11,6 +13,37 @@ F = 8.0
 DT = 0.05
 N = 40
 DAYS = 3000
+
+class RndnumBoxMuller:
+    M = 1        # 平均
+    S = 2.5       # 標準偏差
+    N = 10000     # 生成する個数
+    SCALE = N // 100  # ヒストグラムのスケール
+    std = 0.001
+    n_round = 3
+
+
+    def generate_rndnum(self):
+        # ガウス分布に従う乱数をBox muller法で作成。式は以下。
+        try:
+            r_1 = random.random()
+            r_2 = random.random()
+            x = self.S \
+                * math.sqrt(-2 * math.log(r_1)) \
+                * math.cos(2 * math.pi * r_2) \
+                + self.M
+            y = self.S \
+                * math.sqrt(-2 * math.log(r_1)) \
+                * math.sin(2 * math.pi * r_2) \
+                + self.M
+            
+            x = round(x*self.std, self.n_round)
+            y = round(y*self.std, self.n_round)
+            #print([x, y])
+            return [x, y]
+        except Exception as e:
+            raise
+
 
 class Model_L96:
     def __init__(self, N, DAYS, F, DT):
