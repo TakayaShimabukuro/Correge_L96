@@ -6,62 +6,26 @@ import os
 import math
 import random
 from sklearn.metrics import mean_squared_error
-# パラメータ
-# dN-データ点の個数, dt-幅, F-外力パラメータ, n_step-ステップ数, 2000, 8000, 20000
-
-F = 8.0
-DT = 0.05
-N = 40
-DAYS = 1000  # 21900
-
-class RndnumBoxMuller:
-    M = 20      # 平均
-    S = 2.5    # 標準偏差
-    N = 40     # 生成する個数
-    std = 0.001
-    n_round = 3
-
-    def __init__(self, X):
-        self.hist = X
-
-    def generate_rndnum(self):
-        try:
-            for _ in range(self.N):
-                res = self.__rnd()
-                self.hist[res[0]] += self.std
-                self.hist[res[1]] += self.std
-
-            return self.hist
-        except Exception as e:
-            raise
-
-    def __rnd(self):
-        try:
-            r_1 = random.random()
-            r_2 = random.random()
-            x = self.S \
-                * math.sqrt(-2 * math.log(r_1)) \
-                * math.cos(2 * math.pi * r_2) \
-                + self.M
-            y = self.S \
-                * math.sqrt(-2 * math.log(r_1)) \
-                * math.sin(2 * math.pi * r_2) \
-                + self.M
-            return [math.floor(x), math.floor(y)]
-        except Exception as e:
-            raise
-
 
 class Model_L96:
-    def __init__(self, N, DAYS, F, DT):
+    def __init__(self):
 
-        self.N = N
-        self.F = F
-        self.dt = DT
-        self.DAYS = DAYS
+        self.N = 40
+        self.F = 8.0
+        self.dt = 0.05
+        self.DAYS = 5000
+        self.DAYS2 = 100
+        self.STEP = 300
 
-        self.Xn = np.zeros((self.N, int(self.DAYS)))
-        self.t = np.zeros(int(self.DAYS))
+        self.Xn = np.zeros((self.N, self.DAYS))
+        self.Xn_true = np.zeros((self.N, self.STEP))
+        self.Xn_noise = []
+        self.Xn_pred = np.zeros((self.DAYS2, self.N, self.DAYS2))
+        self.t = np.zeros(self.DAYS)
+        self.t_true = np.zeros(self.DAYS)
+        self.t_pred = np.zeros((self.DAYS2, self.DAYS))
+
+        self.std = 0.01
 
     def f_l96(self, x):
         f = np.zeros((self.N))
@@ -83,56 +47,84 @@ class Model_L96:
         return X_new
 
     def get_estimated_data(self):
-        # 初期値X_iのotherwiseを生成
         X = float(self.F)*np.ones(self.N)
-
-        # i = N/2の場所だけノイズを加える
         X[20] = 1.001*self.F
 
-        # Xnの初期値を代入
         for i in range(self.N):
             self.Xn[i, 0] = copy(X[i])
 
-        # Xnの二回目以降を計算
         for j in range(1, int(self.DAYS)):
             X = self.cal_RK4(X)
             self.Xn[:, j] = X[:]
             self.t[j] = self.dt*j
-
-        return self.Xn
-
-    def get_estimated_data_added_noise(self, xn_true):        
+    
+    def get_estimated_data_true(self):
+        X = self.Xn[:, int(self.DAYS)-1]
         for i in range(self.N):
-            box_muller = RndnumBoxMuller(xn_true)
-            X = box_muller.generate_rndnum()
-            self.Xn[i, 0] = copy(X[i])
+            self.Xn_true[i, 0] = copy(X[i])
 
-        # Xnの二回目以降を計算
-        print(self.DAYS)
-        for j in range(1, int(self.DAYS)):
+        for j in range(1, int(self.STEP)):
             X = self.cal_RK4(X)
-            self.Xn[:, j] = X[:]
-            self.t[j] = self.dt*j
+            self.Xn_true[:, j] = X[:]
+            self.t_true[j] = self.dt*j
 
-def show_graph(xn):
-    for i in range(0, int(DAYS)):
-        if i == int(DAYS)-1:
-            fig = plt.figure()
-            plt.plot(xn[:, i])
-            plt.xlim(0, 40)
-            plt.show()
+    def get_estimated_data_pred(self):
+        for i in range(self.DAYS2):
+            X = self.Xn_noise[i]
+            for j in range(self.N):
+                self.Xn_pred[i][j, 0] = copy(X[j])
+
+            for k in range(1, int(self.DAYS2)):
+                X = self.cal_RK4(X)
+                self.Xn_pred[i][:, k] = X[:]
+                self.t_pred[i][k] = self.dt*k
+    
+    def add_noise(self):
+        noise = np.random.normal(loc=0, scale=1, size=40)
+        tmp = []
+        for i in range(0, int(self.DAYS2)):
+            tmp = self.Xn_true[:, i] + noise
+            self.Xn_noise.append(tmp)
+    
+    def get_rsme(self):
+        tmp = []
+        for i in range(self.DAYS2):
+            tmp.append(self.Xn_true[:, i:i+self.DAYS2] - self.Xn_pred[i])
+        
+        tmp = np.array(tmp)
+        rmse = np.mean(np.sqrt(np.mean(np.power(tmp, 2), axis = 2)), axis = 0)
+
+        return rmse
+
+def show_graph(rsme):
+    fig = plt.figure()
+    plt.plot(rsme)
+    plt.xlabel("time(days)")
+    plt.ylabel("RSME")
+    plt.legend()
+    plt.xticks(np.arange(0, 110, step=10))
+    plt.grid(color='k', linestyle='dotted', linewidth=0.5)
+    plt.savefig("result.png")
+    plt.close()
 
 
-# L96 - 真値導出
-l96_rk4 = Model_L96(N, DAYS, F, DT)
-l96_rk4.get_estimated_data()
-xn_true = l96_rk4.Xn[:, int(DAYS)-1]
-#print(len(l96_rk4.Xn[0]))
 
-# L96 - 観測値導出
-l96_rk4_true = Model_L96(N, DAYS, F, DT)
-xn_pred = l96_rk4_true.get_estimated_data_added_noise(xn_true)
-#print(len(l96_rk4_true.Xn[0]))
+l96_rk4 = Model_L96()
+
+# 1.3年分のシミュレーション
+l96_rk4.get_estimated_data() 
+
+# 2.3年分からスタートして300ステップの真値を取得
+l96_rk4.get_estimated_data_true()
+
+# 3.真値の各ステップにノイズを付加。
+l96_rk4.add_noise()
+
+# 4.ノイズ付加された配列を100STEP時間を進める。
+l96_rk4.get_estimated_data_pred()
+
+# RSME 計算
+rmse = l96_rk4.get_rsme()
 
 # 出力
-show_graph(l96_rk4_true.Xn)
+show_graph(rmse)
