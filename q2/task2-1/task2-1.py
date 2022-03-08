@@ -12,7 +12,7 @@ from sklearn.metrics import mean_squared_error
 F = 8.0
 DT = 0.05
 N = 40
-DAYS = 3000
+DAYS = 1000 #21900
 
 class RndnumBoxMuller:
     M = 1        # 平均
@@ -39,7 +39,6 @@ class RndnumBoxMuller:
             
             x = round(x*self.std, self.n_round)
             y = round(y*self.std, self.n_round)
-            #print([x, y])
             return [x, y]
         except Exception as e:
             raise
@@ -105,13 +104,10 @@ def show_graph(xn):
 
 
 # インスタンス作成
-
 l96_rk4 = Model_L96(N, DAYS, F, DT)
-l96_rk2 = Model_L96(N, DAYS, F, DT)
-l96_euler = Model_L96(N, DAYS, F, DT)
-
-# 計算
 xn = l96_rk4.get_estimated_data()
+xn_true = xn[:, DAYS-1]
+print(xn_true)
 
 # 出力
 show_graph(xn)
