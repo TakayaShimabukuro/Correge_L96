@@ -12,9 +12,7 @@ from sklearn.metrics import mean_squared_error
 F = 8.0
 DT = 0.05
 N = 40
-DAYS = 1000.0  # 21900
-print(type(DAYS))
-
+DAYS = 1000  # 21900
 
 class RndnumBoxMuller:
     M = 20      # 平均
@@ -49,7 +47,6 @@ class RndnumBoxMuller:
                 * math.sqrt(-2 * math.log(r_1)) \
                 * math.sin(2 * math.pi * r_2) \
                 + self.M
-            print(x)
             return [math.floor(x), math.floor(y)]
         except Exception as e:
             raise
@@ -104,26 +101,21 @@ class Model_L96:
 
         return self.Xn
 
-    def get_estimated_data_added_noise(self, xn_true):
-        xn_pred = np.zeros((self.N, int(self.DAYS)))
-        # 乱数を付加
+    def get_estimated_data_added_noise(self, xn_true):        
         for i in range(self.N):
             box_muller = RndnumBoxMuller(xn_true)
-            xn_pred[i, 0] = box_muller.generate_rndnum()
+            X = box_muller.generate_rndnum()
+            self.Xn[i, 0] = copy(X[i])
 
         # Xnの二回目以降を計算
-        for j in range(1, self.N):
-            box_muller = RndnumBoxMuller(xn_true)
-            xn_true = self.cal_RK4(box_muller.generate_rndnum())
-            self.Xn[:, j] = xn_true[:]
+        print(self.DAYS)
+        for j in range(1, int(self.DAYS)):
+            X = self.cal_RK4(X)
+            self.Xn[:, j] = X[:]
             self.t[j] = self.dt*j
-
-        return self.Xn
-
 
 def show_graph(xn):
     for i in range(0, int(DAYS)):
-        print(xn[:, i])
         if i == int(DAYS)-1:
             fig = plt.figure()
             plt.plot(xn[:, i])
@@ -133,14 +125,14 @@ def show_graph(xn):
 
 # L96 - 真値導出
 l96_rk4 = Model_L96(N, DAYS, F, DT)
-xn = l96_rk4.get_estimated_data()
-xn_true = xn[:, int(DAYS)-1]
-#print(xn)
+l96_rk4.get_estimated_data()
+xn_true = l96_rk4.Xn[:, int(DAYS)-1]
+#print(len(l96_rk4.Xn[0]))
 
 # L96 - 観測値導出
-l96_rk4_true = Model_L96(N, F, int(DAYS), DT)
-#xn_pred = l96_rk4_true.get_estimated_data_added_noise(xn_true)
-# print(xn_pred)
+l96_rk4_true = Model_L96(N, DAYS, F, DT)
+xn_pred = l96_rk4_true.get_estimated_data_added_noise(xn_true)
+#print(len(l96_rk4_true.Xn[0]))
 
 # 出力
-show_graph(xn)
+show_graph(l96_rk4_true.Xn)
