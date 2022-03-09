@@ -1,6 +1,7 @@
 # 外部ライブラリ
 from logging import getLogger, config, DEBUG, basicConfig
-import json
+import sys, os
+sys.path.append(os.path.join('..', 'code'))
 
 # 内部ライブラリ
 from model_l96 import Model_L96
