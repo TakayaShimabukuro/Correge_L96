@@ -17,6 +17,8 @@ class Model_L96:
         self.t = np.zeros(n_step)
     
     def f_l96(self, x):
+        #logger.info('f_l96()')
+        
         f = np.zeros((self.N))
         for i in range(2, self.N-1):
             f[i] = (x[i+1]-x[i-2])*x[i-1]-x[i]+self.F
