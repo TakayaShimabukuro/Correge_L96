@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 from logging import getLogger
 import os
+import numpy as np
 logger = getLogger(__name__)
 
 
@@ -10,10 +11,13 @@ class Plot_Methods:
         logger.info('xy_graph_l96()')
         fig = plt.figure()
         self.make_saveFile()
+        logger.debug(len(model.Xn[:, 0]))
+        logger.debug(len(model.t))
 
+        x_length = np.arange(0, len(model.Xn), step=1)
         for i in range(0, model.n_step):
             if i%10 == 0:
-                plt.plot(model.Xn[:, i])
+                plt.plot(x_length, model.Xn[:, i])
                 plt.xlabel("time(days)")
                 plt.ylabel("RMSE")
                 #plt.xticks(np.arange(0, 110, step=10))
