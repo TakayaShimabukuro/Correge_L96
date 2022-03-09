@@ -1,6 +1,6 @@
 # coding: utf-8
 import numpy as np
-from numerical_analysis import Analysis_Methods
+
 
 from logging import getLogger, config
 import json
@@ -16,20 +16,8 @@ class Model_L96:
         self.dt = dt
         self.n_step = n_step
         self.Xn = np.zeros((N, n_step))
+        self.t = np.zeros(n_step)
     
-    def get_estimated_data(self, MODE_SELECT):
-        logger.info('get_estimated_data()')
-
-        analyzer = Analysis_Methods()
-        if MODE_SELECT==1:
-            analyzer.Euler(self.n_step)
-        if MODE_SELECT==2:
-            analyzer.RK2(self.n_step)
-        if MODE_SELECT==3:
-            analyzer.RK4(self.n_step)
-
-        return 0
-
     def f_l96(self, x):
         f = np.zeros((self.N))
         for i in range(2, self.N-1):
