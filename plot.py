@@ -26,11 +26,11 @@ class Plot_Methods:
         
         self.make_file(file_path)
         F_list = [0.1, 0.5, 1.0, 3.0, 5.0, 8.0] # task1-3専用
+        x_length = np.arange(0, len(Xn_list[0]), step=1)
 
         for i, val in enumerate(F_list):
             fig, ax = plt.subplots(1, 1)
-            plt.xlim(0, 40)
-            image1 = ax.contourf(Xn_list[i][:, :].T, cmap='gist_rainbow_r',  levels=10)
+            image1 = ax.contourf(Xn_list[i][:, :], x_length, cmap='gist_rainbow_r',  levels=10)
             cb1 = fig.colorbar(image1, ax=ax,  orientation='horizontal')
             file_name =  file_path + str(val) + ".png"
             plt.savefig(file_name)
