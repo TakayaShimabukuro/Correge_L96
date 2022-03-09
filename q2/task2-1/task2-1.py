@@ -51,7 +51,7 @@ class Model_L96:
     def get_estimated_data_true(self):
         X = self.Xn[:, self.DAYS-1]
         self.Xn_true = self.create_table(self.N, self.STEP, X, self.Xn_true)
-        self.show_graph(self.Xn_true, "Xn_true")
+        #self.show_graph(self.Xn_true, "Xn_true")
 
     def get_estimated_data_pred(self):
         tmp = []

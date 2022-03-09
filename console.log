@@ -1,0 +1,44 @@
+DEBUG:model_l96:Model_L96 - __init__() - Start!!
+INFO:model_l96:Model_L96 - __init__() - finish!!
+INFO:model_l96:Model_L96 - get_estimated_data() - Start!!
+INFO:numerical_analysis:Analysis_Methods - Euler() - Start!!
+INFO:numerical_analysis:Analysis_Methods - Euler() - Finish!!
+INFO:model_l96:Model_L96 - get_estimated_data() - finish!!
+DEBUG:model_l96:Model_L96 - __init__() - Start!!
+INFO:model_l96:Model_L96 - __init__() - finish!!
+INFO:model_l96:Model_L96 - get_estimated_data() - Start!!
+INFO:numerical_analysis:Analysis_Methods - Euler() - Start!!
+INFO:numerical_analysis:Analysis_Methods - Euler() - Finish!!
+INFO:model_l96:Model_L96 - get_estimated_data() - finish!!
+DEBUG:model_l96:Model_L96 - __init__() - Start!!
+INFO:model_l96:Model_L96 - __init__() - finish!!
+INFO:model_l96:Model_L96 - get_estimated_data() - Start!!
+INFO:numerical_analysis:Analysis_Methods - Euler() - Start!!
+INFO:numerical_analysis:Analysis_Methods - Euler() - Finish!!
+INFO:model_l96:Model_L96 - get_estimated_data() - finish!!
+DEBUG:model_l96:Model_L96 - __init__() - Start!!
+INFO:model_l96:Model_L96 - __init__() - finish!!
+INFO:model_l96:Model_L96 - get_estimated_data() - Start!!
+INFO:numerical_analysis:Analysis_Methods - Euler() - Start!!
+INFO:numerical_analysis:Analysis_Methods - Euler() - Finish!!
+INFO:model_l96:Model_L96 - get_estimated_data() - finish!!
+DEBUG:model_l96:Model_L96 - __init__() - Start!!
+INFO:model_l96:Model_L96 - __init__() - finish!!
+INFO:model_l96:Model_L96 - get_estimated_data() - Start!!
+INFO:numerical_analysis:Analysis_Methods - Euler() - Start!!
+INFO:numerical_analysis:Analysis_Methods - Euler() - Finish!!
+INFO:model_l96:Model_L96 - get_estimated_data() - finish!!
+DEBUG:model_l96:Model_L96 - __init__() - Start!!
+INFO:model_l96:Model_L96 - __init__() - finish!!
+INFO:model_l96:Model_L96 - get_estimated_data() - Start!!
+INFO:numerical_analysis:Analysis_Methods - Euler() - Start!!
+INFO:numerical_analysis:Analysis_Methods - Euler() - Finish!!
+INFO:model_l96:Model_L96 - get_estimated_data() - finish!!
+INFO:model_l96:---------------------------------
+INFO:model_l96:__init__()
+INFO:model_l96:get_estimated_data()
+INFO:numerical_analysis:RK4()
+INFO:model_l96:
+INFO:model_l96:__init__()
+INFO:model_l96:get_estimated_data()
+INFO:numerical_analysis:RK4()
