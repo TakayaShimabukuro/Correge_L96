@@ -28,22 +28,27 @@ F = 1.0
 dt = 0.05
 n_step = 3000
 MODE_SELECT = 3  # 1-Euler, 2-RK2, 3, RK4
-F_list = [0.1, 0.5, 1.0, 3.0, 5.0, 8.0] # task1-3限定
+F_list = [0.1, 0.5, 1.0, 3.0, 5.0, 8.0]  # task1-3限定
 
 
 logger.info('Prosess start!!')
 
 # 3年分のシミュレーションを行い、真値を作成する。
-l96 = Model_L96(N, F, dt, n_step)
-analyzer = Analysis_Methods()
-#Xn = analyzer.analyze_model(l96, MODE_SELECT)
-#logger.debug(Xn)
-Xn_list = analyzer.analyze_models(l96, MODE_SELECT, F_list)# task1-3限定
+Xn_list = []
+try:
+    for i, F_val in enumerate(F_list):
+        l96 = Model_L96(N, F_val, dt, n_step)
+        analyzer = Analysis_Methods()
+        Xn = analyzer.analyze_model(l96, MODE_SELECT)
+        Xn_list.append(Xn)
+
+except Exception as e:
+    logger.error(e)
 
 # グラフ出力
 file_path = "./q1/result-3/"
 plot = Plot_Methods()
-#plot.xy_graph_l96(Xn, n_step, file_path)
+# plot.xy_graph_l96(Xn, n_step, file_path)
 plot.xy_graph_hovmoller(Xn_list, file_path)
 
 logger.info('Prosess finish!!')

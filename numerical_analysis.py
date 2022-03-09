@@ -65,24 +65,3 @@ class Analysis_Methods:
         except Exception as e:
             logger.error(e)
             return 0
-
-        
-    
-    def analyze_models(self, model, MODE_SELECT, F_list):
-        logger.info('analyze_models()')
-        
-        try:
-            Xn_list = []
-            for i, val in enumerate(F_list):
-                model.F = F_list[i]
-                
-                X1 = self.get_init_condition(model)
-                Xn = self.get_estimated_data(model, X1, MODE_SELECT)
-                Xn_list.append(Xn)
-            return Xn_list
-
-        except Exception as e:
-            logger.error(e)
-            return 0
-        
-
