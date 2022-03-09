@@ -51,12 +51,14 @@ class Model_L96:
     def get_estimated_data_true(self):
         X = self.Xn[:, self.DAYS-1]
         self.Xn_true = self.create_table(self.N, self.STEP, X, self.Xn_true)
+        self.show_graph(self.Xn_true, "Xn_true")
 
     def get_estimated_data_pred(self):
         tmp = []
         for i in range(self.DAYS2):
             X = self.Xn_noise[i]
-            self.Xn_pred = self.create_table(self.N, self.DAYS2, X, self.Xn_pred)
+            self.Xn_pred = self.create_table_noise(self.N, self.DAYS2, X, self.Xn_pred)
+            #self.show_graph(self.Xn_pred, i)
             tmp.append(self.Xn_pred)
         return tmp
 
@@ -67,13 +69,17 @@ class Model_L96:
             tmp = self.Xn_true[:, i] + noise
             self.Xn_noise.append(tmp)
 
-    def get_rsme(self, data_pred):
+    def get_rmse(self, data_pred):
         rmse_tmp = []
         for i in range(self.DAYS2):
-            show_graph(self.Xn_true[:, i:i+self.DAYS2], i)
-            tmp = np.sqrt(mean_squared_error(self.Xn_true[:, i:i+self.DAYS2], data_pred[i][:, :]))
-            rmse_tmp.append(tmp)
-            
+            for j in range(self.DAYS2):
+                pass
+                #self.show_graph(data_pred[i], i)
+                #self.show_graph(self.Xn_true[:, i:i+self.DAYS2], i)
+                #tmp = np.sqrt(mean_squared_error(self.Xn_true[:, i:i+self.DAYS2], data_pred[i][:, :]))
+                #rmse_tmp.append(tmp)
+        
+
         return rmse_tmp
 
     def create_table(self, n, step, X, tmp_X):
@@ -83,8 +89,20 @@ class Model_L96:
             X = self.cal_RK4(X)
             tmp_X[:, j] = X[:]
         return tmp_X
+    
+    def create_table_noise(self, n, step, X, tmp_X):
+        noise = np.random.normal(loc=0, scale=1, size=40)
+        for i in range(n):
+            tmp_X[i, 0] = copy(X[i])
+        for j in range(1, step):
+            X += noise
+            X = self.cal_RK4(X)
+            tmp_X[:, j] = X[:]
+        
+            #self.show_graph(tmp_X, j)
+        return tmp_X
 
-    def show_graph(self, rsme, i):
+    def show_graph(self, rmse, i):
         fig = plt.figure()
         try:
             new_dir_path = './q2/' + str(i)
@@ -93,20 +111,20 @@ class Model_L96:
             pass
         for j in range(0, self.DAYS2):
             if j%10 == 0:
-                plt.plot(rsme[:, j])
+                plt.plot(rmse[:, j])
                 plt.xlabel("time(days)")
-                plt.ylabel("RSME")
+                plt.ylabel("RMSE")
                 #plt.xticks(np.arange(0, 110, step=10))
                 plt.grid(color='k', linestyle='dotted', linewidth=0.5)
                 name =  "./q2/" + str(i) + "/" + str(j) + ".png"
                 plt.savefig(name)
                 plt.close()
 
-def show_graph(rsme):
+def show_graph(rmse):
     fig = plt.figure()
-    plt.plot(rsme)
+    plt.plot(rmse)
     plt.xlabel("time(days)")
-    plt.ylabel("RSME")
+    plt.ylabel("RMSE")
     plt.legend()
     #plt.xticks(np.arange(0, 110, step=10))
     plt.grid(color='k', linestyle='dotted', linewidth=0.5)
@@ -132,8 +150,8 @@ data_pred = l96_rk4.get_estimated_data_pred()
 #print(len(data_pred[0]))
 #print(data_pred)
 
-# RSME 計算
-rmse = l96_rk4.get_rsme(data_pred)
+# RMSE 計算
+rmse = l96_rk4.get_rmse(data_pred)
 print(len(rmse))
 # 出力
 #show_graph(rmse)
