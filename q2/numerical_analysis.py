@@ -52,12 +52,11 @@ class Analysis_Methods:
                 X1 = self.RK4(model, X1)
             model.Xn[:, j] = X1[:]
             model.t[j] = model.dt*j
-        return model.Xn
 
     # 実行メソッド
     def analyze_model(self, model, MODE_SELECT):
         logger.info('analyze_model()')
 
         X1 = self.get_init_condition(model)
-        Xn = self.get_estimated_data(model, X1, MODE_SELECT)
-        logger.info(Xn)
+        self.get_estimated_data(model, X1, MODE_SELECT)
+
