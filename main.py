@@ -16,8 +16,6 @@ logger.error('error')
 logger.info('Process End!')
 '''
 # logの初期設定
-log_config = open('./log_config.json', 'r')
-config.dictConfig(json.load(log_config))
 logger = getLogger(__name__)
 logger.setLevel(DEBUG)
 basicConfig(filename='console.log', level=DEBUG)
@@ -37,6 +35,8 @@ analyzer = Analysis_Methods()
 analyzer.analyze_model(l96, MODE_SELECT)
 
 # グラフ出力
+file_path = "./q2/result/"
 plot = Plot_Methods()
-plot.xy_graph_l96(l96)
+plot.xy_graph_l96(l96, file_path)
+
 logger.info('Prosess finish')

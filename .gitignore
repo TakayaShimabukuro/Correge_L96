@@ -1,3 +1,4 @@
 *.log
+.gitignore
 ./q1/result/
 ./q2/result/
