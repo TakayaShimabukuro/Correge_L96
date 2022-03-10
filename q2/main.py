@@ -33,11 +33,14 @@ MODE_SELECT = 3  # 1-Euler, 2-RK2, 3, RK4
 std = 0.001
 
 # 3年分のシミュレーションを行い、真値の初期値を作成する。
+logger.info('Prosess Start!!')
+logger.info('Prosess 1')
 l96 = Model_L96(N, F, dt, n_step)
 analyzer = Analysis_Methods()
 Xn = analyzer.analyze_model(l96, l96.Xn, l96.X1, N, n_step, MODE_SELECT)
 
 # 初期値Xnをもとに真値Xn[40, :]を取得
+logger.info('Prosess 2')
 n_step_true = 1501  # 300日分取得
 Xn_true = np.zeros((N, n_step_true))
 Xn_true = analyzer.analyze_model(l96, Xn_true, Xn[:, n_step-1], N, n_step_true, MODE_SELECT)
@@ -45,6 +48,7 @@ Xn_true = analyzer.analyze_model(l96, Xn_true, Xn[:, n_step-1], N, n_step_true, 
 
 # 1-100stepに対して、観測の初期値となる番号にノイズを付加。
 # X1_predsは[40,1]のXnが100step分集まった配列である。
+logger.info('Prosess 3')
 n_step_noise = 101
 X1_preds = []
 noise = np.random.normal(loc=0, scale=1, size=N)
@@ -54,28 +58,32 @@ for i in range(n_step_noise):
     X1_preds.append(X1_pred)
 
 # X1_predsをそれぞれ100day分時間経過させる。
-n_step_pred = 501
-Xn_pred = np.zeros((N, n_step_pred))
+logger.info('Prosess 4')
+n_step_forcast = 501
+Xn_pred = np.zeros((N, n_step_forcast))
 Xn_preds = []
-
 for i in range(n_step_noise):
-    Xn_pred = analyzer.analyze_model(l96, Xn_pred, X1_preds[i], N, n_step_pred, MODE_SELECT)
+    Xn_pred = analyzer.analyze_model(l96, Xn_pred, X1_preds[i], N, n_step_forcast, MODE_SELECT)
     Xn_preds.append(Xn_pred)
 
 # Xn_trueの形式をXn_predsに合わせるため、スライスする。
+logger.info('Prosess 5')
 Xn_trues = []
 for i in range(n_step_noise):
     Xn_trues.append(Xn_true[:, i:i+500])
 
-logger.debug(len(Xn_preds))
-logger.debug(len(Xn_trues))
-'''
+rmse_times = []
 # rmseを導出する。
-#rmse = analyzer.calculate_RMSE(Xn_trues, Xn_preds)
+logger.info('Prosess 6')
+for i in range(n_step_noise):
+    # i step目のrmseを求める。標準偏差が1ということははじめは1だが、だんだんと増えていく様子が確認できる。
+    rmse = analyzer.calculate_RMSE(Xn_trues[i], Xn_preds[i], n_step_noise)
+    rmse_times.append(rmse[20])
 
 # グラフ出力
-#file_path = "./q2/result/"
-#plot = Plot_Methods()
-#plot.xy_graph_l96(Xn_true, n_step_true, file_path)
-'''
+logger.info('Prosess 7')
+file_path = "./q2/result/"
+plot = Plot_Methods()
+plot.xy_graph_rmse(rmse_times, file_path)
+
 logger.info('Prosess finish')

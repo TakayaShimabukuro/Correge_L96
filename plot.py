@@ -7,8 +7,13 @@ logger = getLogger(__name__)
 
 
 class Plot_Methods:
+    def make_file(self, file_path):
+        try:
+            os.mkdir(file_path)
+        except FileExistsError:
+            pass
+
     def xy_graph_l96(self, Xn, step, file_path):
-        logger.info('xy_graph_l96()')
         fig = plt.figure()
         self.make_file(file_path)
 
@@ -22,7 +27,6 @@ class Plot_Methods:
                 plt.close()
 
     def xy_graph_hovmoller(self, Xn_list, file_path):
-        logger.info('xy_graph_l96()')
         
         self.make_file(file_path)
         F_list = [0.1, 0.5, 1.0, 3.0, 5.0, 8.0] # task1-3専用
@@ -35,10 +39,14 @@ class Plot_Methods:
             file_name =  file_path + str(val) + ".png"
             plt.savefig(file_name)
             plt.close()
+    
+    def xy_graph_rmse(self, rmse, file_path):
+        fig = plt.figure()
+        self.make_file(file_path)
 
-    def make_file(self, file_path):
-        logger.info('make_saveFile()')
-        try:
-            os.mkdir(file_path)
-        except FileExistsError:
-            pass
+        x_length = np.arange(0, len(rmse), step=1)
+        plt.plot(x_length, rmse)
+        plt.grid(color='k', linestyle='dotted', linewidth=0.5)
+        file_name =  file_path + str(1) + ".png"
+        plt.savefig(file_name)
+        plt.close()

@@ -1,14 +1,8 @@
 # coding: utf-8
 import numpy as np
-from logging import getLogger, config
-import json
-
-logger = getLogger(__name__)
 
 class Model_L96:
     def __init__(self, N, F, dt, n_step):
-        logger.info('__init__()')
-
         self.N = N
         self.F = F
         self.dt = dt
@@ -18,8 +12,6 @@ class Model_L96:
         self.X1[20] = 1.001*F
     
     def f_l96(self, x):
-        #logger.info('f_l96()')
-        
         f = np.zeros((self.N))
         for i in range(2, self.N-1):
             f[i] = (x[i+1]-x[i-2])*x[i-1]-x[i]+self.F
