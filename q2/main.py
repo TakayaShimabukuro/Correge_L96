@@ -9,6 +9,7 @@ sys.path.append(os.path.join('..', 'code'))
 from plot import Plot_Methods
 from numerical_analysis import Analysis_Methods
 from model_l96 import Model_L96
+# 内部ライブラリ
 
 ''' [code sample]
 logger.info('Process Start!')
@@ -43,7 +44,8 @@ Xn = analyzer.analyze_model(l96, l96.Xn, l96.X1, N, n_step, MODE_SELECT)
 # 初期値Xnをもとに真値Xn[40, :]を取得
 logger.info('Prosess 2')
 n_step_true = 3000
-Xn_true = analyzer.analyze_model(l96, np.zeros((N, n_step_true)), Xn[:, n_step-1], N, n_step_true, MODE_SELECT)
+Xn_true = analyzer.analyze_model(l96, np.zeros(
+    (N, n_step_true)), Xn[:, n_step-1], N, n_step_true, MODE_SELECT)
 
 
 # 真値の1-1000stepをそれぞれ初期値とした配列を作成
@@ -61,8 +63,9 @@ n_step_forcast = 100
 Xn_forcasts = []
 for i in range(n_step_forcast_init):
     Xn_forcasts.append(
-        analyzer.analyze_model(l96, np.zeros((N, n_step_forcast)), X1_forcasts[i], N, n_step_forcast, MODE_SELECT)
-        )
+        analyzer.analyze_model(l96, np.zeros(
+            (N, n_step_forcast)), X1_forcasts[i], N, n_step_forcast, MODE_SELECT)
+    )
 
 
 # Xn_truesをスライス
@@ -78,9 +81,9 @@ rmse_times = []
 for i in range(n_step_forcast_init):
     # i step目のrmseを求める。標準偏差が1ということははじめは1だが、だんだんと増えていく様子が確認できる。
     rmse = analyzer.calculate_RMSE(Xn_trues[i], Xn_forcasts[i], n_step_forcast)
-    #logger.debug(rmse[0])
+    # logger.debug(rmse[0])
     rmse_mean = np.mean(rmse)
-    rmse_times.append(rmse)
+    rmse_times.append(rmse_mean)
 
 
 # グラフ出力
