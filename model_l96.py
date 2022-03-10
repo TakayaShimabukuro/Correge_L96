@@ -14,7 +14,8 @@ class Model_L96:
         self.dt = dt
         self.n_step = n_step
         self.Xn = np.zeros((N, n_step))
-        self.t = np.zeros(n_step)
+        self.X1= float(F)*np.ones(N)
+        self.X1[20] = 1.001*F
     
     def f_l96(self, x):
         #logger.info('f_l96()')

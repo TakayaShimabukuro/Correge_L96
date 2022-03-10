@@ -7,13 +7,13 @@ logger = getLogger(__name__)
 
 
 class Plot_Methods:
-    def xy_graph_l96(self, Xn, n_step, file_path):
+    def xy_graph_l96(self, Xn, step, file_path):
         logger.info('xy_graph_l96()')
         fig = plt.figure()
         self.make_file(file_path)
 
         x_length = np.arange(0, len(Xn), step=1)
-        for i in range(0, n_step):
+        for i in range(0, step):
             if i%10 == 0:
                 plt.plot(x_length, Xn[:, i])
                 plt.grid(color='k', linestyle='dotted', linewidth=0.5)
