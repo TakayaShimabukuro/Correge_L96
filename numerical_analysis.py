@@ -2,7 +2,8 @@ import numpy as np
 from copy import copy
 from sklearn.metrics import mean_squared_error
 
-
+from logging import getLogger
+logger = getLogger(__name__)
 
 
 class Analysis_Methods:
@@ -27,12 +28,26 @@ class Analysis_Methods:
         X1_new = X1_old + model.dt/6.0 * (k1 + 2.0*k2 + 2.0*k3 + k4)
         return X1_new
     
-    def calculate_RMSE(self, Xn_true, Xn_pred, step):
+
+    #RMSEを計算するメソッド
+    def calculate_RMSE(self, Xn_true, Xn_forcast, step):
         rmse_steps = []
         for i in range(step):
-            rmse = np.sqrt(mean_squared_error(Xn_true[:, i], Xn_pred[:, i]))
+            sub = Xn_true[:, i] - Xn_forcast[:, i]
+            rmse = np.sqrt(np.mean(sub**2))
             rmse_steps.append(rmse)
+                
         return rmse_steps
+    
+
+    #配列にノイズを付加するメソッド
+    def add_noise(self, Xn, N):
+        noise = np.random.normal(loc=0, scale=1, size=len(Xn))
+        std = 0.001
+        Xn_tmp = np.zeros(N)
+        Xn_tmp = Xn + (noise*std)
+        return Xn_tmp
+    
 
     # X1[40, 1]を初期値とするstep分のシミュレーションを行う。
     def analyze_model(self, model, Xn, X1, N, step, MODE_SELECT):
@@ -47,4 +62,3 @@ class Analysis_Methods:
                 X1 = self.RK4(model, X1)
             Xn[:, j] = X1[:]
         return Xn
-

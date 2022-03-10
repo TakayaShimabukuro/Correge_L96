@@ -22,7 +22,6 @@ class Model_L96:
         self.Xn_true = np.zeros((self.N, self.STEP))
         self.Xn_pred = np.zeros((self.N, self.DAYS2))
         self.Xn_noise = []
-        self.std = 0.001
 
     def f_l96(self, x):
         f = np.zeros((self.N))

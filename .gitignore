@@ -2,3 +2,4 @@ console.log
 .gitignore
 *.png
 *.pyc
+*/.pyc
