@@ -29,6 +29,9 @@ class Analysis_Methods:
         k4 = model.f_l96(X1_old + k3*model.dt)
         X1_new = X1_old + model.dt/6.0 * (k1 + 2.0*k2 + 2.0*k3 + k4)
         return X1_new
+    
+    def calculate_RMSE(self, Xn_true, Xn_pred):
+        pass
 
     # X1[40, 1]を初期値とするstep分のシミュレーションを行う。
     def analyze_model(self, model, Xn, X1, N, step, MODE_SELECT):
