@@ -64,22 +64,23 @@ for i in range(step_t):
 logger.info('Prosess 4')
 Xf, Pf, Xa, Pa = l96.KF(Y)
 
-for i in range(20):
-    if i%2 == 0:
-        logger.debug(Y[:, i])
+
+for i in range(5):
+    if i%1 == 0:
+        logger.debug(Xf[:, i])
         
 logger.info('')
 logger.info('')
 logger.info('')
 
-for i in range(20):
-    if i%2 == 0:
+for i in range(5):
+    if i%1 == 0:
         logger.debug(Xa[:, i])
 
 
 # 5. plot data
 logger.info('Prosess 5')
-plot.funcOfTime(Y, Xf, Xa, t_2year[0:step_t], file_path)
+plot.funcOfTime(Xt, Y, Xf, Xa, t_2year[0:step_t], file_path)
 
 # 6. plot RMSE
 logger.info('Prosess 6')

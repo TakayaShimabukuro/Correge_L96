@@ -25,16 +25,14 @@ class Model_L96:
         k2 = self.l96(X1 + k1*0.5) * self.dt
         k3 = self.l96(X1 + k2*0.5) * self.dt
         k4 = self.l96(X1 + k3) * self.dt
-        a = X1 + (k1 + 2.0*k2 + 2.0*k3 + k4) 
-        b = 6.0
-        return np.divide(a, b, out=np.zeros_like(a), where=b!=0) 
+        return X1 + (k1 + 2.0*k2 + 2.0*k3 + k4) /6.0
 
     # カルマンフィルタ
     def KF(self, Y):
         
         # init setting
         step = len(Y)
-        delta = 0.03
+        delta = 10**-5
         Xf = np.zeros((self.N, step))
         Pf = np.zeros((self.N, self.N, step))
         Xa = np.zeros((self.N, step))
@@ -96,6 +94,6 @@ class Model_L96:
         for j in range(1, step):
             X1 = self.RK4(X1)
             Xn[:, j] = X1[:]
-            t[j] =self.dt*j
+            t[j] =self.dt*j*5
         return Xn, t
     
