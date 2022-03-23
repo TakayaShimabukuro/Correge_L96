@@ -86,6 +86,16 @@ plot.funcOfTime(data, params, names)
 logger.info('Prosess 5')
 Xa_RMSE = l96.RMSE(Xa, Xt, step_t)
 Pa_Spread = l96.Spread(Pa)
-plot.VarianceInfration(Xa_RMSE, Pa_Spread, t_2year[0:step_t], 176, filePath, "Xa")
+
+start = 0
+end = start + 175
+fileName = "result-VarianceInfration-" + str(start) + "-" + str(end) + ".png"
+XLabel = "time(day)"
+YLabel = "X"
+Title = "EKF, VarianceInfration, 175days"
+data =[Xa_RMSE, Pa_Spread, t_2year[0:step_t]]
+params = [start, end+1]
+names = [filePath, fileName, XLabel, YLabel, Title]
+plot.VarianceInfration(data, params, names)
 
 logger.info('Prosess finish!!')

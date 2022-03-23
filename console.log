@@ -3,7 +3,6 @@ INFO:__main__:Prosess 1
 INFO:__main__:Prosess 2
 INFO:__main__:Prosess 3
 INFO:__main__:Prosess 4
-DEBUG:plot:./q4/result/result-funcOfTime-0-50.png
 DEBUG:matplotlib.font_manager:findfont: Matching sans\-serif:style=normal:variant=normal:weight=normal:stretch=normal:size=12.0.
 DEBUG:matplotlib.font_manager:findfont: score(<Font 'STIXSizeOneSym' (STIXSizOneSymReg.ttf) normal normal 400 normal>) = 10.05
 DEBUG:matplotlib.font_manager:findfont: score(<Font 'DejaVu Serif' (DejaVuSerif-Italic.ttf) italic normal 400 normal>) = 11.05
