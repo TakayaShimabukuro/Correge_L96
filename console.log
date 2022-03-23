@@ -3,6 +3,8 @@ INFO:__main__:Prosess 1
 INFO:__main__:Prosess 2
 INFO:__main__:Prosess 3
 INFO:__main__:Prosess 4
+DEBUG:__main__:--- params---
+DEBUG:__main__:[0, 6, 1]
 DEBUG:matplotlib.font_manager:findfont: Matching sans\-serif:style=normal:variant=normal:weight=normal:stretch=normal:size=12.0.
 DEBUG:matplotlib.font_manager:findfont: score(<Font 'STIXSizeOneSym' (STIXSizOneSymReg.ttf) normal normal 400 normal>) = 10.05
 DEBUG:matplotlib.font_manager:findfont: score(<Font 'DejaVu Serif' (DejaVuSerif-Italic.ttf) italic normal 400 normal>) = 11.05
@@ -1513,9 +1515,28 @@ DEBUG:matplotlib.font_manager:findfont: score(<Font 'OCR A Extended' (OCRAEXT.TT
 DEBUG:matplotlib.font_manager:findfont: score(<Font 'MS Reference Sans Serif' (REFSAN.TTF) normal normal 400 normal>) = 10.05
 DEBUG:matplotlib.font_manager:findfont: score(<Font 'Lucida Bright' (LBRITE.TTF) normal normal 400 normal>) = 10.05
 DEBUG:matplotlib.font_manager:findfont: Matching sans\-serif:style=normal:variant=normal:weight=normal:stretch=normal:size=10.0 to DejaVu Sans ('C:\\Users\\user\\anaconda3\\lib\\site-packages\\matplotlib\\mpl-data\\fonts\\ttf\\DejaVuSans.ttf') with score of 0.050000.
-INFO:__main__:Prosess 5
 INFO:__main__:Prosess 4
-INFO:__main__:Prosess 5
+DEBUG:__main__:--- params---
+DEBUG:__main__:[0, 51, 10]
 INFO:__main__:Prosess 4
-INFO:__main__:Prosess 5
+DEBUG:__main__:--- params---
+DEBUG:__main__:[250, 301, 10]
+INFO:__main__:Prosess 4
+DEBUG:__main__:--- params---
+DEBUG:__main__:[0, 6, 1]
+INFO:__main__:Prosess 4
+DEBUG:__main__:--- params---
+DEBUG:__main__:[0, 51, 10]
+INFO:__main__:Prosess 4
+DEBUG:__main__:--- params---
+DEBUG:__main__:[250, 301, 10]
+INFO:__main__:Prosess 4
+DEBUG:__main__:--- params---
+DEBUG:__main__:[0, 6, 1]
+INFO:__main__:Prosess 4
+DEBUG:__main__:--- params---
+DEBUG:__main__:[0, 51, 10]
+INFO:__main__:Prosess 4
+DEBUG:__main__:--- params---
+DEBUG:__main__:[250, 301, 10]
 INFO:__main__:Prosess finish!!
