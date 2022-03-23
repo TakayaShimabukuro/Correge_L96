@@ -37,6 +37,22 @@ class Plot_Methods:
         plt.savefig(names[0] + names[1])
         plt.close()
 
+    def VarianceInfrationDelta(self, data, params, names):
+        plt.figure()
+        self.make_file(names[0])
+        plt.xticks(np.arange(params[0], params[1], step=params[2]))
+        for i in range(params[3]):
+            label = "delt=" + str(names[5][i])
+            logger.info(label)
+            plt.plot(data[1][params[0]*4+1:params[1]*4+1], data[0][i, params[0]*4+1:params[1]*4+1], label=label)
+        plt.grid(color='k', linestyle='dotted', linewidth=0.5)
+        plt.xlim(params[0],params[1]-1)
+        plt.xlabel(names[2])
+        plt.ylabel(names[3])
+        plt.title(names[4])
+        plt.savefig(names[0] + names[1])
+        plt.close()
+
     def funcOfTime(self, data, params, names):
         plt.figure()
         self.make_file(names[0])

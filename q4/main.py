@@ -43,10 +43,8 @@ filePath = "./q4/result/"
 
 step_2year = 2848
 step_t = 1424
-d = [0.00, 0.03, 0.05]
-step=[1, 10, 10]
-start = [0, 0, 250]
-end = [5, 50, 300]
+d = [0.00, 0.03, 0.05, 0.10, 0.20]
+
 l96 = Model_L96(N, F, dt, delta)
 plot = Plot_Methods()
 
@@ -70,6 +68,35 @@ Y = np.zeros((N, step_t))
 for i in range(step_t):
     Y[:, i] = Xt[:, i] + np.random.normal(loc=mu, scale=sigma, size=N)
 
+
+# 6. Kalman Filter
+logger.info('Prosess 6')
+start = 0
+end = 300
+step = 60
+
+Xa_deltas = np.zeros((len(d), step_t))
+for i in range(len(d)):
+    Xf, Pf, Xa, Pa = l96.KF(Y, d[i])
+    Xa_RMSE = l96.RMSE(Xa, Xt, step_t)
+    Xa_deltas[i, :] = Xa_RMSE
+
+logger.debug(Xa_deltas.shape)
+fileName = "varianceInfration-2-" + \
+str(d[i]) + "-" + str(start) + "-" + str(end) + ".png"
+XLabel = "time(day)"
+YLabel = "ave RMSE"
+Title = "EKF, VarianceInfration"
+data = [Xa_deltas, t_2year[0:step_t]]
+params = [start, end+1, step, len(d)]
+names = [filePath, fileName, XLabel, YLabel, Title, d]
+plot.VarianceInfrationDelta(data, params, names)
+
+'''
+#Variance Inflation, Func of Time
+start = [0, 0, 250]
+end = [5, 50, 300]
+step = [1, 10, 10]
 for i in range(len(d)):
     for j in range(len(d)):
         # 4. Kalman Filter
@@ -88,7 +115,7 @@ for i in range(len(d)):
         plot.funcOfTime(data, params, names)
 
     # 5. RMSE & Spread
-    '''
+    
     logger.info('Prosess 5')
     Xa_RMSE = l96.RMSE(Xa, Xt, step_t)
     Pa_Spread = l96.Spread(Pa)
