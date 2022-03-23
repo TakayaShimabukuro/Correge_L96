@@ -30,7 +30,7 @@ class Model_L96:
         return X1 + (k1 + 2.0*k2 + 2.0*k3 + k4) /6.0
 
     # カルマンフィルタ
-    def KF(self, Y):
+    def KF(self, Y, d):
         
         # init setting
         step = len(Y[0])
@@ -53,7 +53,8 @@ class Model_L96:
             # progress 2
             M = self.get_M(Xa[:, t-1])            
             Xf[:, t] = self.RK4(Xa[:, t-1])
-            Pf[:, :, t] = M@Pa[:, :, t-1]@M.T
+            Pf[:, :, t] = (M@Pa[:, :, t-1]@M.T)
+            Pf[:, :, t] = Pf[:, :, t]*(1 + d)
 
             # progress 3
             K = (Pf[:, :, t]@H.T)@np.linalg.inv(H@Pf[:, :, t]@H.T + R)

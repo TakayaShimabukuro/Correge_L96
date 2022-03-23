@@ -1514,4 +1514,8 @@ DEBUG:matplotlib.font_manager:findfont: score(<Font 'MS Reference Sans Serif' (R
 DEBUG:matplotlib.font_manager:findfont: score(<Font 'Lucida Bright' (LBRITE.TTF) normal normal 400 normal>) = 10.05
 DEBUG:matplotlib.font_manager:findfont: Matching sans\-serif:style=normal:variant=normal:weight=normal:stretch=normal:size=10.0 to DejaVu Sans ('C:\\Users\\user\\anaconda3\\lib\\site-packages\\matplotlib\\mpl-data\\fonts\\ttf\\DejaVuSans.ttf') with score of 0.050000.
 INFO:__main__:Prosess 5
+INFO:__main__:Prosess 4
+INFO:__main__:Prosess 5
+INFO:__main__:Prosess 4
+INFO:__main__:Prosess 5
 INFO:__main__:Prosess finish!!

@@ -43,6 +43,7 @@ filePath = "./q4/result/"
 
 step_2year = 2848
 step_t = 1424
+d = [0.00, 0.03, 0.05]
 l96 = Model_L96(N, F, dt, delta)
 plot = Plot_Methods()
 
@@ -66,36 +67,37 @@ Y = np.zeros((N, step_t))
 for i in range(step_t):
     Y[:, i] = Xt[:, i] + np.random.normal(loc=mu, scale=sigma, size=N)
 
-# 4. Kalman Filter
-logger.info('Prosess 4')
-Xf, Pf, Xa, Pa = l96.KF(Y)
+for j in range(len(d)):
+    # 4. Kalman Filter
+    logger.info('Prosess 4')
+    Xf, Pf, Xa, Pa = l96.KF(Y, d[j])
 
-start = 0
-end = start + 50
-fileName = "result-funcOfTime-" + str(start) + "-" + str(end) + ".png"
-XLabel = "time(day)"
-YLabel = "X"
-Title = "EKF, funcOfTime, 50days"
-data = [Xt, Y, Xf, Xa, t_2year[0:step_t]]
-params = [start, end+1]
-names = [filePath, fileName, XLabel, YLabel, Title]
+    start = 0
+    end = start + 50
+    fileName = "funcOfTime-" +  str(d[j]) + "-" + str(start) + "-" + str(end) + ".png"
+    XLabel = "time(day)"
+    YLabel = "X"
+    Title = "EKF, funcOfTime"
+    data = [Xt, Y, Xf, Xa, t_2year[0:step_t]]
+    params = [start, end+1]
+    names = [filePath, fileName, XLabel, YLabel, Title]
 
-plot.funcOfTime(data, params, names)
+    plot.funcOfTime(data, params, names)
 
-# 5. RMSE & Spread
-logger.info('Prosess 5')
-Xa_RMSE = l96.RMSE(Xa, Xt, step_t)
-Pa_Spread = l96.Spread(Pa)
+    # 5. RMSE & Spread
+    logger.info('Prosess 5')
+    Xa_RMSE = l96.RMSE(Xa, Xt, step_t)
+    Pa_Spread = l96.Spread(Pa)
 
-start = 0
-end = start + 175
-fileName = "result-VarianceInfration-" + str(start) + "-" + str(end) + ".png"
-XLabel = "time(day)"
-YLabel = "X"
-Title = "EKF, VarianceInfration, 175days"
-data =[Xa_RMSE, Pa_Spread, t_2year[0:step_t]]
-params = [start, end+1]
-names = [filePath, fileName, XLabel, YLabel, Title]
-plot.VarianceInfration(data, params, names)
+    start = 0
+    end = start + 175
+    fileName = "varianceInfration-" + str(d[j]) + "-" + str(start) + "-" + str(end) + ".png"
+    XLabel = "time(day)"
+    YLabel = "X"
+    Title = "EKF, VarianceInfration"
+    data =[Xa_RMSE, Pa_Spread, t_2year[0:step_t]]
+    params = [start, end+1]
+    names = [filePath, fileName, XLabel, YLabel, Title]
+    plot.VarianceInfration(data, params, names)
 
 logger.info('Prosess finish!!')
