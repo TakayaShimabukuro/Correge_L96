@@ -6,6 +6,8 @@ import sympy
 from sympy.codegen.cfunctions import log10
 from scipy.stats import norm
 from scipy.interpolate import interp1d
+from logging import getLogger, DEBUG, basicConfig
+logger = getLogger(__name__)
 class Plot_Methods:
     def make_file(self, file_path):
         try:
@@ -59,6 +61,17 @@ class Plot_Methods:
         xs_2, ys_2 = self.spline_interp(x_2, y_2)
         xs_3, ys_3 = self.spline_interp(x_3, y_3)
         xs_4, ys_4 = self.spline_interp(x_4, y_4)
+        logger.debug('--- t---')
+        logger.debug(t.shape)
+        logger.debug('--- X---')
+        logger.debug(X.shape)
+        logger.debug('--- Y---')
+        logger.debug(Y.shape)
+        logger.debug('--- X1---')
+        logger.debug(X1.shape)
+        logger.debug('--- X2---')
+        logger.debug(X2.shape)
+        logger.info('------------------------------')
         plt.plot(t[0:day * 4 + 1], X[No, 0:day * 4 + 1], label="Truth")
         plt.plot(t[0:day * 4 + 1], Y[No, 0:day * 4 + 1], label="Observe")
         plt.plot(t[0:day * 4 + 1], X1[No, 0:day * 4 + 1], label="Forcast")

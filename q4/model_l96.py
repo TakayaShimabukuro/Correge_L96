@@ -33,7 +33,7 @@ class Model_L96:
     def KF(self, Y):
         
         # init setting
-        step = len(Y)
+        step = len(Y[0])
         Xf = np.zeros((self.N, step))
         Pf = np.zeros(((self.N, self.N, step)))
         Xa = np.zeros((self.N, step))
