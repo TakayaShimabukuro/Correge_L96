@@ -78,13 +78,15 @@ class Model_L96:
         return M
     
     
-    def RMSE(self, X1, X2):
-        rmse= [] # 1000シミュレーションを平均したrmseを格納、100-step分出力される
-        for i in range(len(X1)):
+    def RMSE(self, X1, X2, step):
+        rmse = np.zeros((step))
+        for i in range(step):
             sub = X1[:, i] - X2[:, i]
-            rmse.append(np.sqrt(np.mean(sub**2)))
+            rmse[i] = np.sqrt(np.mean(sub**2))
         return rmse
 
+    def Spread(self, P):
+        return np.sqrt(np.trace(P)/len(P))
 
     # X1[40, 1]を初期値とするstep分のシミュレーションを行う。
     def analyze_model(self, Xn, X1_tmp, step):

@@ -24,54 +24,29 @@ class Plot_Methods:
         plt.savefig(file_path + "gauss_hist_0.001" + ".png")
         plt.close()
     
-    def graph_simulation(self, data,  file_path):
-        self.make_file(file_path)
-        plt.plot(data)
-        plt.grid(color='k', linestyle='dotted', linewidth=0.5)
-        file_name = file_path + "result" + ".png"
-        plt.savefig(file_name)
-        plt.close()
-    
-    def RMSE(self, rmse1, rmse2, t, file_path):
+    def VarianceInfration(self, rmse, spread, t, day, file_path):
         fig = plt.figure()
         self.make_file(file_path)
-        #plt.xticks(np.arange(0, 101, step=10))
-        #plt.plot(rmse1)
-        plt.plot(rmse2)
-        plt.grid(color='k', linestyle='dotted', linewidth=0.5)
-        file_name = file_path +"-rmse" + ".png"
-        plt.savefig(file_name)
-        plt.close()
-    
-
-    def funcOfTime(self, X, Y, X1, X2, t, file_path):
-        fig = plt.figure()
-        self.make_file(file_path)
-        day = 50
-        
-        No = 10
-        plt.xticks(np.arange(0, day + 1, step=10))
-
-        x_1, y_1 = self.moving_avg(t[0:day * 4 + 1], X[No, 0:day * 4 + 1])
-        x_2, y_2 = self.moving_avg(t[0:day * 4 + 1], Y[No, 0:day * 4 + 1])
-        x_3, y_3 = self.moving_avg(t[0:day * 4 + 1], X1[No, 0:day * 4 + 1])
-        x_4, y_4 = self.moving_avg(t[0:day * 4 + 1], X2[No, 0:day * 4 + 1])
-
-        xs_1, ys_1 = self.spline_interp(x_1, y_1)
-        xs_2, ys_2 = self.spline_interp(x_2, y_2)
-        xs_3, ys_3 = self.spline_interp(x_3, y_3)
-        xs_4, ys_4 = self.spline_interp(x_4, y_4)
+        logger.debug('--- rmse ---')
+        logger.debug(rmse.shape)
+        logger.debug('--- spread---')
+        logger.debug(spread.shape)
         logger.debug('--- t---')
         logger.debug(t.shape)
-        logger.debug('--- X---')
-        logger.debug(X.shape)
-        logger.debug('--- Y---')
-        logger.debug(Y.shape)
-        logger.debug('--- X1---')
-        logger.debug(X1.shape)
-        logger.debug('--- X2---')
-        logger.debug(X2.shape)
         logger.info('------------------------------')
+
+        plt.xticks(np.arange(0, day, step=25))
+        plt.plot(t[0:day * 4 + 1], rmse)
+        plt.plot(t[0:day * 4 + 1], spread)
+        plt.grid(color='k', linestyle='dotted', linewidth=0.5)
+        file_name = file_path +"result-RMSE" + ".png"
+        plt.savefig(file_name)
+        plt.close()
+
+    def funcOfTime(self, X, Y, X1, X2, t, day, No, file_path):
+        fig = plt.figure()
+        self.make_file(file_path)
+        plt.xticks(np.arange(0, day + 1, step=10))
         plt.plot(t[0:day * 4 + 1], X[No, 0:day * 4 + 1], label="Truth")
         plt.plot(t[0:day * 4 + 1], Y[No, 0:day * 4 + 1], label="Observe")
         plt.plot(t[0:day * 4 + 1], X1[No, 0:day * 4 + 1], label="Forcast")
@@ -81,17 +56,3 @@ class Plot_Methods:
         file_name = file_path +"result-funcOfTime" + ".png"
         plt.savefig(file_name)
         plt.close()
-
-    
-    def spline_interp(self, in_x, in_y):
-        out_x = np.linspace(np.min(in_x), np.max(in_x), np.size(in_x)*100) # もとのxの個数より多いxを用意
-        func_spline = interp1d(in_x, in_y, kind='cubic') # cubicは3次のスプライン曲線
-        out_y = func_spline(out_x) # func_splineはscipyオリジナルの型
-
-        return out_x, out_y
-
-    def moving_avg(self, in_x, in_y):
-        np_y_conv = np.convolve(in_y, np.ones(3)/float(3), mode='valid') # 畳み込む
-        out_x_dat = np.linspace(np.min(in_x), np.max(in_x), np.size(np_y_conv))
-
-        return out_x_dat, np_y_conv
