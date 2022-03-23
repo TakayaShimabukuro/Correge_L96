@@ -8,12 +8,9 @@ from model_l96 import Model_L96
 
 
 ''' [code sample]
-logger.info('Process Start!')
-logger.debug('debug')
-logger.info('info')
-logger.warning('warning')
-logger.error('error')
-logger.info('Process End!')
+logger.debug((Pf[:, :, t]).shape)
+logger.debug('--- self.RK4(a) ---')
+logger.info('------------------------------')
 '''
 
 # logの初期設定
@@ -26,6 +23,7 @@ basicConfig(filename='console.log', level=DEBUG, filemode='w')
 N = 40
 F = 8.0
 dt = 0.05
+delta = 10**-5
 
 mu = 0
 sigma = 1
@@ -37,7 +35,7 @@ file_path = "./q4/result/"
 
 step_2year = 2848
 step_t = 1424
-l96 = Model_L96(N, F, dt)
+l96 = Model_L96(N, F, dt, delta)
 plot = Plot_Methods()
 
 # 1. L96を2年分シミュレーションする
@@ -63,20 +61,6 @@ for i in range(step_t):
 # 4. Kalman Filter
 logger.info('Prosess 4')
 Xf, Pf, Xa, Pa = l96.KF(Y)
-
-
-for i in range(5):
-    if i%1 == 0:
-        logger.debug(Xf[:, i])
-        
-logger.info('')
-logger.info('')
-logger.info('')
-
-for i in range(5):
-    if i%1 == 0:
-        logger.debug(Xa[:, i])
-
 
 # 5. plot data
 logger.info('Prosess 5')

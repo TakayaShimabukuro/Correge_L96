@@ -2,11 +2,13 @@ from ctypes.wintypes import HACCEL
 import numpy as np
 from logging import getLogger, DEBUG, basicConfig
 logger = getLogger(__name__)
+
 class Model_L96:
-    def __init__(self, N, F, dt):
+    def __init__(self, N, F, dt, delta):
         self.N = N
         self.F = F
         self.dt = dt
+        self.delta = delta 
 
         
     # Lorenz 96
@@ -32,11 +34,10 @@ class Model_L96:
         
         # init setting
         step = len(Y)
-        delta = 10**-5
         Xf = np.zeros((self.N, step))
-        Pf = np.zeros((self.N, self.N, step))
+        Pf = np.zeros(((self.N, self.N, step)))
         Xa = np.zeros((self.N, step))
-        Pa = np.zeros((self.N, self.N, step))
+        Pa = np.zeros(((self.N, self.N, step)))
         H = np.identity(self.N)
         R = np.identity(self.N)
         I = np.identity(self.N)
@@ -44,35 +45,36 @@ class Model_L96:
 
         # progress 1
         Xf[:, 0] = Y[:, 100]
-        Pf[:, :, 0] = np.diag([25]*self.N)
+        Pf[:, :, 0] = np.diag([10]*self.N)
         Xa[:, 0] = Y[:, 100]
-        Pa[:, :, 0] = np.diag([25]*self.N)
-
+        Pa[:, :, 0] = np.diag([10]*self.N)
+        
         for t in range(1, step):
             # progress 2
-            M = self.get_M(Xa[:, t-1], delta)
+            M = self.get_M(Xa[:, t-1])            
             Xf[:, t] = self.RK4(Xa[:, t-1])
             Pf[:, :, t] = M@Pa[:, :, t-1]@M.T
 
             # progress 3
-            a = Pf[:, :, t]@H.T
-            b = H@Pf[:, :, t]@H.T + R
-            K = np.divide(a, b, out=np.zeros_like(a), where=b!=0)
-            Xa[:, t] = Xf[:, t] + K@(Y[:,t-1] - Xf[:, t])
-            Pa[:, :, t] = (I - K@H)@Pf[:, :, t]@(I - K@H).T+K@R@K.T
+            K = (Pf[:, :, t]@H.T)@np.linalg.inv(H@Pf[:, :, t]@H.T + R)
+            Xa[:, t] = Xf[:, t] + K@(Y[:,t] - Xf[:, t])
+            Pa[:, :, t] = (I-K@H)@Pf[:, :, t]
 
         # progress 4
         return Xf, Pf, Xa, Pa
 
 
     # Mを導出
-    def get_M(self, X, delta):
+    def get_M(self, X):
         e = np.identity(self.N)
         M = np.zeros((self.N, self.N))
 
+        np.set_printoptions(threshold=np.inf)
         for i in range(self.N):
-            M[:, i] = (self.RK4(X + delta*e[:, i])-self.RK4(X)) / delta
-            
+            a = X + self.delta*e[:, i]
+            b = X
+            M[:, i] = (self.RK4(a)-self.RK4(b)) / self.delta
+
         return M
     
     
