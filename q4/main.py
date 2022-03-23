@@ -39,7 +39,7 @@ sigma = 1
 # local parameter
 logger.info('Prosess Start!!')
 
-file_path = "./q4/result/"
+filePath = "./q4/result/"
 
 step_2year = 2848
 step_t = 1424
@@ -68,18 +68,24 @@ for i in range(step_t):
 
 # 4. Kalman Filter
 logger.info('Prosess 4')
-day = 50
-No = 10
 Xf, Pf, Xa, Pa = l96.KF(Y)
-#plot.funcOfTime(Xt, Y, Xf, Xa, t_2year[0:step_t], day, No, file_path)
+
+start = 0
+end = start + 50
+fileName = "result-funcOfTime-" + str(start) + "-" + str(end) + ".png"
+XLabel = "time(day)"
+YLabel = "X"
+Title = "EKF, funcOfTime, 50days"
+data = [Xt, Y, Xf, Xa, t_2year[0:step_t]]
+params = [start, end+1]
+names = [filePath, fileName, XLabel, YLabel, Title]
+
+plot.funcOfTime(data, params, names)
 
 # 5. RMSE & Spread
 logger.info('Prosess 5')
-Xf_RMSE = l96.RMSE(Xf, Xt, step_t)
 Xa_RMSE = l96.RMSE(Xa, Xt, step_t)
-Pf_Spread = l96.Spread(Pf)
 Pa_Spread = l96.Spread(Pa)
-plot.VarianceInfration(Xf_RMSE, Pf_Spread, t_2year[0:step_t], 175, file_path)
-
+plot.VarianceInfration(Xa_RMSE, Pa_Spread, t_2year[0:step_t], 176, filePath, "Xa")
 
 logger.info('Prosess finish!!')

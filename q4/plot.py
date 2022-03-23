@@ -24,35 +24,34 @@ class Plot_Methods:
         plt.savefig(file_path + "gauss_hist_0.001" + ".png")
         plt.close()
     
-    def VarianceInfration(self, rmse, spread, t, day, file_path):
-        fig = plt.figure()
+    def VarianceInfration(self, rmse, spread, t, day, file_path, file_name):
+        plt.figure()
         self.make_file(file_path)
-        logger.debug('--- rmse ---')
-        logger.debug(rmse.shape)
-        logger.debug('--- spread---')
-        logger.debug(spread.shape)
-        logger.debug('--- t---')
-        logger.debug(t.shape)
-        logger.info('------------------------------')
-
         plt.xticks(np.arange(0, day, step=25))
-        plt.plot(t[0:day * 4 + 1], rmse)
-        plt.plot(t[0:day * 4 + 1], spread)
+        plt.plot(t[0:day * 4 + 1], rmse[0:day * 4 + 1])
+        plt.plot(t[0:day * 4 + 1], spread[0:day * 4 + 1])
         plt.grid(color='k', linestyle='dotted', linewidth=0.5)
-        file_name = file_path +"result-RMSE" + ".png"
+        file_name = file_path +"result-VarianceInfration-" + file_name + ".png"
+        plt.xlabel("time(day)")
+        plt.ylabel("RMSE")
+        plt.title("EKF, No.1, delta=0.00")
         plt.savefig(file_name)
         plt.close()
 
-    def funcOfTime(self, X, Y, X1, X2, t, day, No, file_path):
-        fig = plt.figure()
-        self.make_file(file_path)
-        plt.xticks(np.arange(0, day + 1, step=10))
-        plt.plot(t[0:day * 4 + 1], X[No, 0:day * 4 + 1], label="Truth")
-        plt.plot(t[0:day * 4 + 1], Y[No, 0:day * 4 + 1], label="Observe")
-        plt.plot(t[0:day * 4 + 1], X1[No, 0:day * 4 + 1], label="Forcast")
-        plt.plot(t[0:day * 4 + 1], X2[No, 0:day * 4 + 1], label="Analysis")
+    def funcOfTime(self, data, params, names):
+        plt.figure()
+        self.make_file(names[0])
+        plt.xticks(np.arange(params[0], params[1], step=10))
+        plt.plot(data[4][params[0]:params[1]*4+1], data[0][1, params[0]:params[1]*4+1], label="Truth")
+        plt.plot(data[4][params[0]:params[1]*4+1], data[1][1, params[0]:params[1]*4+1], label="Observe")
+        plt.plot(data[4][params[0]:params[1]*4+1], data[2][1, params[0]:params[1]*4+1], label="Forcast")
+        plt.plot(data[4][params[0]:params[1]*4+1], data[3][1, params[0]:params[1]*4+1], label="Analysis")
         plt.legend()
         plt.grid(color='k', linestyle='dotted', linewidth=0.5)
-        file_name = file_path +"result-funcOfTime" + ".png"
-        plt.savefig(file_name)
+        plt.xlabel(names[2])
+        plt.ylabel(names[3])
+        plt.title(names[4])
+        name = names[0] + names[1]
+        logger.debug(name)
+        plt.savefig(names[0] + names[1])
         plt.close()
