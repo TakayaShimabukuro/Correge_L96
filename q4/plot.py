@@ -30,6 +30,7 @@ class Plot_Methods:
         plt.xticks(np.arange(params[0], params[1], step=25))
         plt.plot(data[2][params[0]:params[1]*4+1], data[0][params[0]:params[1]*4+1], label="RMSE")
         plt.plot(data[2][params[0]:params[1]*4+1], data[1][params[0]:params[1]*4+1], label="SPREAD")
+        plt.legend()
         plt.grid(color='k', linestyle='dotted', linewidth=0.5)
         plt.xlabel(names[2])
         plt.ylabel(names[3])

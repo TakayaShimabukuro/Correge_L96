@@ -68,6 +68,41 @@ Y = np.zeros((N, step_t))
 for i in range(step_t):
     Y[:, i] = Xt[:, i] + np.random.normal(loc=mu, scale=sigma, size=N)
 
+'''
+for i in range(len(d)):
+    for j in range(len(d)):
+        # 4. Kalman Filter
+        logger.info('Prosess 4')
+        Xf, Pf, Xa, Pa = l96.KF(Y, d[i])
+        fileName = "funcOfTime-" +  str(d[i]) + "-" + str(start[j]) + "-" + str(end[j]) + ".png"
+        XLabel = "time(day)"
+        YLabel = "X"
+        Title = "EKF, funcOfTime"
+        data = [Xt, Y, Xf, Xa, t_2year[0:step_t]]
+        params = [start[j], end[j]+1, step[j]]
+        names = [filePath, fileName, XLabel, YLabel, Title]
+        logger.debug('--- params---')
+        logger.debug(params)
+
+        plot.funcOfTime(data, params, names)
+
+    # 5. RMSE & Spread
+    
+    logger.info('Prosess 5')
+    Xa_RMSE = l96.RMSE(Xa, Xt, step_t)
+    Pa_Spread = l96.Spread(Pa)
+
+    start = 0
+    end = start + 175
+    fileName = "varianceInfration-" + str(d[i]) + "-" + str(start) + "-" + str(end) + ".png"
+    XLabel = "time(day)"
+    YLabel = "X"
+    Title = "EKF, VarianceInfration"
+    data =[Xa_RMSE, Pa_Spread, t_2year[0:step_t]]
+    params = [start, end+1]
+    names = [filePath, fileName, XLabel, YLabel, Title]
+    plot.VarianceInfration(data, params, names)
+    '''
 
 # 6. Kalman Filter
 logger.info('Prosess 6')
