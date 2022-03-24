@@ -68,7 +68,9 @@ Y = np.zeros((N, step_t))
 for i in range(step_t):
     Y[:, i] = Xt[:, i] + np.random.normal(loc=mu, scale=sigma, size=N)
 
-'''
+step=[1, 10, 10]
+start = [0, 0, 250]
+end = [5, 50, 300]
 for i in range(len(d)):
     for j in range(len(d)):
         # 4. Kalman Filter
@@ -102,7 +104,7 @@ for i in range(len(d)):
     params = [start, end+1]
     names = [filePath, fileName, XLabel, YLabel, Title]
     plot.VarianceInfration(data, params, names)
-    '''
+
 
 # 6. Kalman Filter
 logger.info('Prosess 6')
