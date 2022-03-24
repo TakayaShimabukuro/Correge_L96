@@ -20,14 +20,10 @@ from model_l96 import Model_L96
         logger.debug(X2.shape)
         logger.info('------------------------------')
 '''
-
-# logの初期設定
+# public parameter
 logger = getLogger(__name__)
 logger.setLevel(DEBUG)
 basicConfig(filename='console.log', level=DEBUG, filemode='w')
-
-
-# public parameter
 N = 40
 F = 8.0
 dt = 0.05
@@ -39,11 +35,17 @@ sigma = 1
 logger.info('Prosess Start!!')
 step_2year = 2848
 step_t = 1424
-#d = np.arange(0, 0.225, 0.025)
-d = [0.00,0.03, 0.05, 0.1, 0.2]
+#d = np.arange(0, 0.20, 0.025)
+d = [0.00, 0.03, 0.05, 0.1, 0.2, 0.75, 0.15, 0.225]
 path = "./q4/result/"
 l96 = Model_L96(N, F, dt, delta, d)
 plot = Plot_Methods(path)
+Xfs = []
+Pfs = []
+Xas = []
+Pas = []
+Xas_RMSE = []
+Pas_Spread = []
 
 
 # 1. L96を2年分シミュレーションする
@@ -69,11 +71,6 @@ for i in range(step_t):
 
 # 4. Kalman Filter
 logger.info('Prosess 4')
-Xfs = []
-Pfs = []
-Xas = []
-Pas = []
-
 for i in range(len(d)):
     Xf, Pf, Xa, Pa = l96.KF(Y, d[i])
     Xfs.append(Xf)
@@ -84,9 +81,6 @@ for i in range(len(d)):
 
 # 5. Variance Inflation
 logger.info('Prosess 5')
-Xas_RMSE = []
-Pas_Spread = []
-
 for i in range(len(d)):
     Xas_RMSE.append(l96.RMSE(Xas[i], Xt, step_t))
     Pas_Spread.append(l96.Spread(Pas[i]))
@@ -104,6 +98,11 @@ plot.AnalysisRMSE(d, t_2year, Xas_RMSE)
 
 
 # 8. Sensitivity to Infl. Factor
+logger.info('Prosess 8')
+rmse_aves = l96.get_RMSE_Ave(d, Xas_RMSE)
+plot.InflationRatio(d, rmse_aves)
+
+
 # 9. Analysis Error Covariance Pa
 
 #l96.VarianceInflation(Xt, Y, t_2year, step_t)

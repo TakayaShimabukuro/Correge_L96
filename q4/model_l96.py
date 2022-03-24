@@ -22,7 +22,6 @@ class Model_L96:
             f[i] = (x[i+1]-x[i-2])*x[i-1]-x[i]+self.F
         return f
     
-
     # ルンゲクッタ4次
     def RK4(self, X1):
         k1 = self.l96(X1) * self.dt
@@ -65,7 +64,6 @@ class Model_L96:
         # progress 4
         return Xf, Pf, Xa, Pa
 
-
     # Mを導出
     def get_M(self, X):
         e = np.identity(self.N)
@@ -79,16 +77,16 @@ class Model_L96:
 
         return M
     
-
-    def showAveRMSE(self, data, d):
+    # RMSEのaveを取得
+    def get_RMSE_Ave(self, d, Xas_RMSE):
         logger.info("Ave RMSE (10th day - 300th day)")
         logger.info("-------------------------------")
-        ave_list = []
+        rmse_aves = []
         for i in range(len(d)):
-            ave = sum(data[i]) / len(data[i])
-            logger.debug("delta=" + str(d[i]) + "-> RMSE=" + str(ave))
-            ave_list.append(ave)
-        return ave_list
+            rmse_ave = sum(Xas_RMSE[i]) / len(Xas_RMSE[i])
+            logger.debug("delta=" + str(d[i]) + "-> RMSE=" + str(rmse_ave))
+            rmse_aves.append(rmse_ave)
+        return rmse_aves
     
     # RMSEを取得
     def RMSE(self, X1, X2, step):
@@ -114,99 +112,3 @@ class Model_L96:
             Xn[:, j] = X1[:]
             t[j] =self.dt*j*5
         return Xn, t
-    
-    def VarianceInflation(self, Xt, Y, t, step):
-        plot = Plot_Methods()
-        step=[1, 10, 10]
-        start=[0, 0, 250]
-        end=[5, 50, 300]
-        for i in range(len(d)):
-            for j in range(len(step)):
-                # 4. Kalman Filter
-                logger.info('Prosess 4')
-                Xf, Pf, Xa, Pa = self.KF(Y, d[i])
-                fileName = "funcOfTime-" +  str(d[i]) + "-" + str(start[j]) + "-" + str(end[j]) + ".png"
-                XLabel = "time(day)"
-                YLabel = "X"
-                Title = "EKF, funcOfTime"
-                data = [Xt, Y, Xf, Xa, t_2year[0:step_t]]
-                params = [start[j], end[j]+1, step[j]]
-                names = [filePath, fileName, XLabel, YLabel, Title]
-                logger.debug('--- params---')
-                logger.debug(params)
-
-                plot.funcOfTime(data, params, names)
-
-            # 5. RMSE & Spread
-            
-            logger.info('Prosess 5')
-            Xa_RMSE = self.RMSE(Xa, Xt, step_t)
-            Pa_Spread = self.Spread(Pa)
-
-            start = 0
-            end = start + 175
-            fileName = "varianceInfration-" + str(d[i]) + "-" + str(start) + "-" + str(end) + ".png"
-            XLabel = "time(day)"
-            YLabel = "X"
-            Title = "EKF, VarianceInfration"
-            data =[Xa_RMSE, Pa_Spread, t_2year[0:step_t]]
-            params = [start, end+1]
-            names = [filePath, fileName, XLabel, YLabel, Title]
-            plot.VarianceInfration(data, params, names)
-    
-    def AnalysisRMSE(self, Xt, Y, d, t_2year, step_t, filePath):
-        plot = Plot_Methods()
-        Xa_deltas = np.zeros((len(d), step_t))
-        for i in range(len(d)):
-            Xf, Pf, Xa, Pa = self.KF(Y, d[i])
-            Xa_RMSE = self.RMSE(Xa, Xt, step_t)
-            Xa_deltas[i, :] = Xa_RMSE
-
-        start = 0
-        end = 300
-        step = 60
-        fileName = "AnalysisRMSE-" + str(d[i]) + "-" + str(start) + "-" + str(end) + ".png"
-        XLabel = "time(day)"
-        YLabel = "RMSE"
-        Title = " Lecture4-EKF "
-        data = [Xa_deltas, t_2year[0:step_t]]
-        params = [start, end+1, step, len(d)]
-        names = [filePath, fileName, XLabel, YLabel, Title, d]
-        plot.VarianceInfrationDelta(data, params, names)
-
-        start2 = 0
-        end2 = 20
-        step2 = 2.5
-        fileName2 = "AnalysisRMSE-" + \
-        str(d[i]) + "-" + str(start2) + "-" + str(end2) + ".png"
-        params = [start2, end2+1, step2, len(d), True, 0, 1.4]
-        names = [filePath, fileName2, XLabel, YLabel, Title, d]
-        plot.VarianceInfrationDeltaPickUp(data, params, names)
-
-        start3 = 220
-        end3 = 300
-        step3 = 10
-        fileName3 = "AnalysisRMSE-" + \
-        str(d[i]) + "-" + str(start3) + "-" + str(end3) + ".png"
-        params = [start3, end3+1, step3, len(d), True, 0, 1.4]
-        names = [filePath, fileName3, XLabel, YLabel, Title, d]
-        plot.VarianceInfrationDeltaPickUp(data, params, names)
-
-        return Xa_deltas
-    
-    def RatioRMSE(self, Xa_deltas, Xt, Y, d, t_2year, step_t, filePath):
-        plot = Plot_Methods()
-        start = 0
-        end = 0.225
-        step = 0.025
-        fileName3 = "RatioRMSE.png"
-        XLabel = "Infration Ratio"
-        YLabel = "ave RMSE"
-        Title = " Lecture4-EKF "
-        ave_list = self.showAveRMSE(Xa_deltas, d)
-        data = [d, ave_list, t_2year[0:step_t]]
-        params = [start, end, step, len(d), True, 0, 1.4]
-        names = [filePath, fileName3, XLabel, YLabel, Title, d]
-        plot.VarianceInfrationDeltaPickUp(data, params, names)
-
-
