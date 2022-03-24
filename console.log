@@ -3,7 +3,6 @@ INFO:__main__:Prosess 1
 INFO:__main__:Prosess 2
 INFO:__main__:Prosess 3
 INFO:__main__:Prosess 6
-DEBUG:__main__:(5, 1424)
 INFO:plot:delt=0.0
 INFO:plot:delt=0.03
 INFO:plot:delt=0.05
@@ -1519,4 +1518,22 @@ DEBUG:matplotlib.font_manager:findfont: score(<Font 'OCR A Extended' (OCRAEXT.TT
 DEBUG:matplotlib.font_manager:findfont: score(<Font 'MS Reference Sans Serif' (REFSAN.TTF) normal normal 400 normal>) = 10.05
 DEBUG:matplotlib.font_manager:findfont: score(<Font 'Lucida Bright' (LBRITE.TTF) normal normal 400 normal>) = 10.05
 DEBUG:matplotlib.font_manager:findfont: Matching sans\-serif:style=normal:variant=normal:weight=normal:stretch=normal:size=10.0 to DejaVu Sans ('C:\\Users\\user\\anaconda3\\lib\\site-packages\\matplotlib\\mpl-data\\fonts\\ttf\\DejaVuSans.ttf') with score of 0.050000.
+INFO:plot:delt=0.0
+INFO:plot:delt=0.03
+INFO:plot:delt=0.05
+INFO:plot:delt=0.1
+INFO:plot:delt=0.2
+INFO:plot:delt=0.0
+INFO:plot:delt=0.03
+INFO:plot:delt=0.05
+INFO:plot:delt=0.1
+INFO:plot:delt=0.2
+INFO:__main__:Prosess 7
+INFO:model_l96:Ave RMSE (10th day - 300th day)
+INFO:model_l96:-------------------------------
+DEBUG:model_l96:delta=0.0-> RMSE=3.8597018136588592
+DEBUG:model_l96:delta=0.03-> RMSE=3.230844958857739
+DEBUG:model_l96:delta=0.05-> RMSE=2.2728622470023234
+DEBUG:model_l96:delta=0.1-> RMSE=0.9340821588645593
+DEBUG:model_l96:delta=0.2-> RMSE=0.9454212575852257
 INFO:__main__:Prosess finish!!

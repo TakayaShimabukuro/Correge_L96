@@ -71,27 +71,46 @@ for i in range(step_t):
 
 # 6. Kalman Filter
 logger.info('Prosess 6')
-start = 0
-end = 300
-step = 60
-
 Xa_deltas = np.zeros((len(d), step_t))
 for i in range(len(d)):
     Xf, Pf, Xa, Pa = l96.KF(Y, d[i])
     Xa_RMSE = l96.RMSE(Xa, Xt, step_t)
     Xa_deltas[i, :] = Xa_RMSE
 
-logger.debug(Xa_deltas.shape)
-fileName = "varianceInfration-2-" + \
+start = 0
+end = 300
+step = 60
+fileName = "varianceInfration-pickup-" + \
 str(d[i]) + "-" + str(start) + "-" + str(end) + ".png"
 XLabel = "time(day)"
-YLabel = "ave RMSE"
+YLabel = "RMSE"
 Title = "EKF, VarianceInfration"
 data = [Xa_deltas, t_2year[0:step_t]]
 params = [start, end+1, step, len(d)]
 names = [filePath, fileName, XLabel, YLabel, Title, d]
 plot.VarianceInfrationDelta(data, params, names)
 
+start2 = 0
+end2 = 20
+step2 = 2.5
+fileName2 = "varianceInfration-pickup-" + \
+str(d[i]) + "-" + str(start2) + "-" + str(end2) + ".png"
+params = [start2, end2+1, step2, len(d), True, 0, 1.4]
+names = [filePath, fileName2, XLabel, YLabel, Title, d]
+plot.VarianceInfrationDeltaPickUp(data, params, names)
+
+start3 = 220
+end3 = 300
+step3 = 10
+fileName3 = "varianceInfration-pickup-" + \
+str(d[i]) + "-" + str(start3) + "-" + str(end3) + ".png"
+params = [start3, end3+1, step3, len(d), True, 0, 1.4]
+names = [filePath, fileName3, XLabel, YLabel, Title, d]
+plot.VarianceInfrationDeltaPickUp(data, params, names)
+
+# 7. getAveRMSE
+logger.info('Prosess 7')
+l96.showAveRMSE(Xa_deltas, d)
 '''
 #Variance Inflation, Func of Time
 start = [0, 0, 250]

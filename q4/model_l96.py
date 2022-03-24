@@ -53,12 +53,11 @@ class Model_L96:
             # progress 2
             M = self.get_M(Xa[:, t-1])            
             Xf[:, t] = self.RK4(Xa[:, t-1])
-            Pf[:, :, t] = (M@Pa[:, :, t-1]@M.T)
-            Pf[:, :, t] = Pf[:, :, t]*(1 + d)
+            Pf[:, :, t] = (M@Pa[:, :, t-1]@M.T)*(1 + d)
 
             # progress 3
             K = (Pf[:, :, t]@H.T)@np.linalg.inv(H@Pf[:, :, t]@H.T + R)
-            Xa[:, t] = Xf[:, t] + K@(Y[:,t] - Xf[:, t])
+            Xa[:, t] = Xf[:, t] + K@(Y[:,t-1] - Xf[:, t])
             Pa[:, :, t] = (I-K@H)@Pf[:, :, t]
 
         # progress 4
@@ -78,6 +77,12 @@ class Model_L96:
 
         return M
     
+    def showAveRMSE(self, data, d):
+        logger.info("Ave RMSE (10th day - 300th day)")
+        logger.info("-------------------------------")
+        for i in range(len(d)):
+            ave = sum(data[i]) / len(data[i])
+            logger.debug("delta=" + str(d[i]) + "-> RMSE=" + str(ave))
     
     def RMSE(self, X1, X2, step):
         rmse = np.zeros((step))
