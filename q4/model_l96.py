@@ -80,9 +80,12 @@ class Model_L96:
     def showAveRMSE(self, data, d):
         logger.info("Ave RMSE (10th day - 300th day)")
         logger.info("-------------------------------")
+        ave_list = []
         for i in range(len(d)):
             ave = sum(data[i]) / len(data[i])
             logger.debug("delta=" + str(d[i]) + "-> RMSE=" + str(ave))
+            ave_list.append(ave)
+        return ave_list
     
     def RMSE(self, X1, X2, step):
         rmse = np.zeros((step))

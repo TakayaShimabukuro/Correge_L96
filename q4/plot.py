@@ -95,3 +95,16 @@ class Plot_Methods:
         plt.title(names[4])
         plt.savefig(names[0] + names[1])
         plt.close()
+    
+    def aveRMSERatio(self, data, params, names):
+        plt.figure()
+        self.make_file(names[0])
+        plt.plot(data[0], data[1], label="RMSE(analysis-true)", marker="o",fillstyle='none', color="b", linestyle="dashed", lw=0.8)
+        plt.legend()
+        plt.grid(color='k', linestyle='dotted', linewidth=0.5)
+        plt.xlim(params[0],params[1])
+        plt.xlabel(names[2])
+        plt.ylabel(names[3])
+        plt.title(names[4])
+        plt.savefig(names[0] + names[1])
+        plt.close()
