@@ -91,9 +91,12 @@ for i in range(len(d)):
     Xas_RMSE.append(l96.RMSE(Xas[i], Xt, step_t))
     Pas_Spread.append(l96.Spread(Pas[i]))
 
-plot.VarianceInfration(d, t_2year, Xas_RMSE, Pas_Spread)
+#plot.VarianceInfration(d, t_2year, Xas_RMSE, Pas_Spread)
 
 # 6. First Variable X(1) as a func. of time
+logger.info('Prosess 6')
+plot.X1asFuncOfTime(d, t_2year, Xt, Y, Xfs, Xas)
+
 # 7. Analysis RMSE
 # 8. Sensitivity to Infl. Factor
 # 9. Analysis Error Covariance Pa

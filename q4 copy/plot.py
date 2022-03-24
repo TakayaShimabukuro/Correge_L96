@@ -79,7 +79,7 @@ class Plot_Methods:
         plt.close()
     
 
-    def funcOfTime(self, data, params, names):
+    def X1asFuncOfTime(self, data, params, names):
         plt.figure()
         self.make_file(names[0])
         plt.xticks(np.arange(params[0], params[1], step=params[2]))
