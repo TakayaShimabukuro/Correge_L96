@@ -14,21 +14,17 @@ logger = getLogger(__name__)
 class Plot_Methods:
     def __init__(self, path):
         self.path = path
+        self.make_file(self.path)
+    
+
+    def make_file(self, path):
         try:
             os.mkdir(path)
         except FileExistsError:
             pass        
-
-
-    def graph_noise(self, data):
-        weights = np.ones_like(data) / len(data)
-        plt.hist(data, weights = weights, density=True) # 縦軸が相対度数
-        plt.savefig(self.path + "gauss_hist_0.001" + ".png")
-        plt.close()
     
 
     def VarianceInfration(self, d, t, Xas_RMSE, Pas_Spread):
-        plt.figure()
         x_step=[25]
         x_start=[0]
         x_end=[175]
@@ -36,6 +32,7 @@ class Plot_Methods:
         y_label = "RMSE"
         line_labels = ["RMSE", "Spread"]
         title = "Lecture4-EKF"
+        self.make_file(self.path+"/VarianceInfration")
         for i in range(len(d)):
             for j in range(len(x_step)):
                 plt.figure()
@@ -44,16 +41,15 @@ class Plot_Methods:
                 plt.plot(t[x_start[j]*4:x_end[j]*4], Pas_Spread[i][x_start[j]*4:x_end[j]*4], label=line_labels[0])
                 plt.legend()
                 plt.grid(color='k', linestyle='dotted', linewidth=0.5)
-                plt.xlim(x_start[j],x_end[j])
+                plt.xlim(x_start[j],x_end[j]+1)
                 plt.xlabel(x_label)
                 plt.ylabel(y_label)
                 plt.title(title)
-                plt.savefig(self.path + "VarianceInfration-delta-" + str(d[i])+ "-day-" + str(x_start[j]) +"-" + str(x_end[j]) + ".png")
+                plt.savefig(self.path + "VarianceInfration/VarianceInfration-delta-" + str(d[i])+ "-day-" + str(x_start[j]) +"-" + str(x_end[j]) + ".png")
                 plt.close()
     
 
     def X1asFuncOfTime(self, d, t, Xt, Y, Xfs, Xas):
-        plt.figure()
         x_step=[1, 10, 10]
         x_start=[0, 0, 250]
         x_end=[5, 50, 300]
@@ -61,6 +57,7 @@ class Plot_Methods:
         y_label = "X"
         line_labels = ["Truth", "Observe", "Forcast", "Analysis"]
         title = "Lecture4-EKF"
+        self.make_file(self.path+"/X1asFuncOfTime")
 
         for i in range(len(d)):
             for j in range(len(x_step)):
@@ -72,12 +69,40 @@ class Plot_Methods:
                 plt.plot(t[x_start[j]*4:x_end[j]*4], Xas[i][1, x_start[j]*4:x_end[j]*4], label=line_labels[3])
                 plt.legend()
                 plt.grid(color='k', linestyle='dotted', linewidth=0.5)
-                plt.xlim(x_start[j],x_end[j])
+                plt.xlim(x_start[j],x_end[j]+1)
                 plt.xlabel(x_label)
                 plt.ylabel(y_label)
                 plt.title(title)
-                plt.savefig(self.path + "FuncOfTime-delta-" + str(d[i])+ "-day-" + str(x_start[j]) +"-" + str(x_end[j]) + ".png")
+                plt.savefig(self.path + "X1asFuncOfTime/X1asFuncOfTime-delta-" + str(d[i])+ "-day-" + str(x_start[j]) +"-" + str(x_end[j]) + ".png")
                 plt.close()
+    
+
+    def AnalysisRMSE(self, d, t, Xas_RMSE):
+        x_step=[60, 10, 10, 1]
+        x_start=[0, 0, 250, 0]
+        x_end=[300, 50, 300, 5]
+        x_label = "time(day)"
+        y_label = "RMSE"
+        line_labels = ["delt="+str(d[0]), "delta="+str(d[1]), "delta="+str(d[2]), "delta="+str(d[3])]
+        title = "Lecture4-EKF"
+        self.make_file(self.path+"/AnalysisRMSE")
+
+        for j in range(len(x_step)):
+            plt.figure()
+            plt.xticks(np.arange(x_start[j], x_end[j], step=x_step[j]))
+            plt.plot(t[x_start[j]*4:x_end[j]*4], Xas_RMSE[0][x_start[j]*4:x_end[j]*4], label=line_labels[0])
+            plt.plot(t[x_start[j]*4:x_end[j]*4], Xas_RMSE[1][x_start[j]*4:x_end[j]*4], label=line_labels[1])
+            plt.plot(t[x_start[j]*4:x_end[j]*4], Xas_RMSE[2][x_start[j]*4:x_end[j]*4], label=line_labels[2])
+            plt.plot(t[x_start[j]*4:x_end[j]*4], Xas_RMSE[3][x_start[j]*4:x_end[j]*4], label=line_labels[3])
+            plt.legend()
+            plt.grid(color='k', linestyle='dotted', linewidth=0.5)
+            plt.xlim(x_start[j],x_end[j]+1)
+            plt.xlabel(x_label)
+            plt.ylabel(y_label)
+            plt.title(title)
+            plt.savefig(self.path + "AnalysisRMSE/AnalysisRMSE-day-" + str(x_start[j]) +"-" + str(x_end[j]) + ".png")
+            plt.close()
+
 
     def VarianceInfrationDelta(self, data, params, names):
         plt.figure()

@@ -40,7 +40,7 @@ logger.info('Prosess Start!!')
 step_2year = 2848
 step_t = 1424
 #d = np.arange(0, 0.225, 0.025)
-d = np.arange(0, 0.2, 0.1)
+d = [0.00,0.03, 0.05, 0.1, 0.2]
 path = "./q4/result/"
 l96 = Model_L96(N, F, dt, delta, d)
 plot = Plot_Methods(path)
@@ -90,14 +90,19 @@ Pas_Spread = []
 for i in range(len(d)):
     Xas_RMSE.append(l96.RMSE(Xas[i], Xt, step_t))
     Pas_Spread.append(l96.Spread(Pas[i]))
+plot.VarianceInfration(d, t_2year, Xas_RMSE, Pas_Spread)
 
-#plot.VarianceInfration(d, t_2year, Xas_RMSE, Pas_Spread)
 
 # 6. First Variable X(1) as a func. of time
 logger.info('Prosess 6')
 plot.X1asFuncOfTime(d, t_2year, Xt, Y, Xfs, Xas)
 
+
 # 7. Analysis RMSE
+logger.info('Prosess 7')
+plot.AnalysisRMSE(d, t_2year, Xas_RMSE)
+
+
 # 8. Sensitivity to Infl. Factor
 # 9. Analysis Error Covariance Pa
 
