@@ -84,23 +84,23 @@ logger.info('Prosess 5')
 for i in range(len(d)):
     Xas_RMSE.append(l96.RMSE(Xas[i], Xt, step_t))
     Pas_Spread.append(l96.Spread(Pas[i]))
-plot.VarianceInfration(d, t_2year, Xas_RMSE, Pas_Spread)
+#plot.VarianceInfration(d, t_2year, Xas_RMSE, Pas_Spread)
 
 
 # 6. First Variable X(1) as a func. of time
 logger.info('Prosess 6')
-plot.X1asFuncOfTime(d, t_2year, Xt, Y, Xfs, Xas)
+#plot.X1asFuncOfTime(d, t_2year, Xt, Y, Xfs, Xas)
 
 
 # 7. Analysis RMSE
 logger.info('Prosess 7')
-plot.AnalysisRMSE(d, t_2year, Xas_RMSE)
+#plot.AnalysisRMSE(d, t_2year, Xas_RMSE)
 
 
 # 8. Sensitivity to Infl. Factor
 logger.info('Prosess 8')
 rmse_aves = l96.get_RMSE_Ave(d, Xas_RMSE)
-plot.InflationRatio(d, rmse_aves)
+#plot.InflationRatio(d, rmse_aves)
 
 
 # 9. Analysis Error Covariance Pa
