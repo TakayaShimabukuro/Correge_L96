@@ -5,14 +5,13 @@ from plot import Plot_Methods
 logger = getLogger(__name__)
 
 class Model_L96:
-    # 初期値
-    def __init__(self, N, F, dt, delta, d):
+    def __init__(self, N, F, dt, delta):
         self.N = N
         self.F = F
         self.dt = dt
         self.delta = delta 
-        self.d = d
 
+        
     # Lorenz 96
     def l96(self, x):
         f = np.zeros_like(x)
@@ -79,7 +78,6 @@ class Model_L96:
 
         return M
     
-
     def showAveRMSE(self, data, d):
         logger.info("Ave RMSE (10th day - 300th day)")
         logger.info("-------------------------------")
@@ -90,15 +88,13 @@ class Model_L96:
             ave_list.append(ave)
         return ave_list
     
-    # RMSEを取得
     def RMSE(self, X1, X2, step):
         rmse = np.zeros((step))
         for i in range(step):
             sub = X1[:, i] - X2[:, i]
             rmse[i] = np.sqrt(np.mean(sub**2))
         return rmse
-    
-    # Spreadを取得
+
     def Spread(self, P):
         return np.sqrt(np.trace(P)/len(P))
 
@@ -115,7 +111,7 @@ class Model_L96:
             t[j] =self.dt*j*5
         return Xn, t
     
-    def VarianceInflation(self, Xt, Y, t, step):
+    def VarianceInflation(self, Xt, Y, d, t_2year, step_t, filePath):
         plot = Plot_Methods()
         step=[1, 10, 10]
         start=[0, 0, 250]

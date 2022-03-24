@@ -32,19 +32,21 @@ N = 40
 F = 8.0
 dt = 0.05
 delta = 10**-5
+
 mu = 0
 sigma = 1
 
 # local parameter
 logger.info('Prosess Start!!')
+
+filePath = "./q4/result/"
+
 step_2year = 2848
 step_t = 1424
-#d = np.arange(0, 0.225, 0.025)
-d = np.arange(0, 0.2, 0.1)
-path = "./q4/result/"
-l96 = Model_L96(N, F, dt, delta, d)
-plot = Plot_Methods(path)
+d = np.arange(0, 0.225, 0.025)
 
+l96 = Model_L96(N, F, dt, delta)
+plot = Plot_Methods()
 
 # 1. L96を2年分シミュレーションする
 logger.info('Prosess 1')
@@ -66,36 +68,16 @@ Y = np.zeros((N, step_t))
 for i in range(step_t):
     Y[:, i] = Xt[:, i] + np.random.normal(loc=mu, scale=sigma, size=N)
 
-
-# 4. Kalman Filter
+# 4. Variance Inflation (KF), func. of time 
 logger.info('Prosess 4')
-Xfs = []
-Pfs = []
-Xas = []
-Pas = []
+l96.VarianceInflation(Xt, Y, d, t_2year, step_t, filePath)
 
-for i in range(len(d)):
-    Xf, Pf, Xa, Pa = l96.KF(Y, d[i])
-    Xfs.append(Xf)
-    Pfs.append(Pf)
-    Xas.append(Xa)
-    Pas.append(Pa)
-
-
-# 5. Variance Inflation
+# 5. AnalysisRMSE
 logger.info('Prosess 5')
-Xas_RMSE = []
-Pas_Spread = []
+Xa_deltas = l96.AnalysisRMSE(Xt, Y, d, t_2year, step_t, filePath)
 
-for i in range(len(d)):
-    Xas_RMSE.append(l96.RMSE(Xas[i], Xt, step_t))
-    Pas_Spread.append(l96.Spread(Pas[i]))
+# 6. RatioRMSE
+logger.info('Prosess 6')
+l96.RatioRMSE(Xa_deltas, Xt, Y, d, t_2year, step_t, filePath)
 
-plot.VarianceInfration(d, t_2year, Xas_RMSE, Pas_Spread)
-
-# 6. First Variable X(1) as a func. of time
-# 7. Analysis RMSE
-# 8. Sensitivity to Infl. Factor
-# 9. Analysis Error Covariance Pa
-
-#l96.VarianceInflation(Xt, Y, t_2year, step_t)
+logger.info('Prosess finish!!')

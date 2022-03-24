@@ -9,44 +9,34 @@ from scipy.interpolate import interp1d
 from logging import getLogger, DEBUG, basicConfig
 logger = getLogger(__name__)
 class Plot_Methods:
-    def __init__(self, path):
-        self.path = path
+    def make_file(self, file_path):
         try:
-            os.mkdir(path)
+            os.mkdir(file_path)
         except FileExistsError:
-            pass        
+            pass
 
-    def graph_noise(self, data):
+    def graph_noise(self, data,  file_path):
+        self.make_file(file_path)
         weights = np.ones_like(data) / len(data)
+        # plt.hist(data)  # 縦軸が度数
         plt.hist(data, weights = weights, density=True) # 縦軸が相対度数
-        plt.savefig(self.path + "gauss_hist_0.001" + ".png")
+        #plt.show()
+        plt.savefig(file_path + "gauss_hist_0.001" + ".png")
         plt.close()
     
-    def VarianceInfration(self, d, t, Xas_RMSE, Pas_Spread):
+    def VarianceInfration(self, data, params, names):
         plt.figure()
-        x_step=[25]
-        x_start=[0]
-        x_end=[175]
-        x_label = "time(day)"
-        y_label = "X"
-        line_labels = ["RMSE", "Spread"]
-        title = "Lecture4-EKF"
-        logger.debug(len(Xas_RMSE))
-        for i in range(len(d)):
-            for j in range(len(x_step)):
-                plt.figure()
-                plt.xticks(np.arange(x_start[j], x_end[j], step=x_step[j]))
-                plt.plot(t[x_start[j]*4:x_end[j]*4], Xas_RMSE[i][x_start[j]*4:x_end[j]*4], label=line_labels[0])
-                plt.plot(t[x_start[j]*4:x_end[j]*4], Pas_Spread[i][x_start[j]*4:x_end[j]*4], label=line_labels[0])
-                plt.legend()
-                plt.grid(color='k', linestyle='dotted', linewidth=0.5)
-                plt.xlim(x_start[j],x_end[j])
-                plt.xlabel(x_label)
-                plt.ylabel(y_label)
-                plt.title(title)
-                plt.savefig(self.path + "VarianceInfration-delta-" + str(d[i])+ "-day-" + str(x_start[j]) +"-" + str(x_end[j]) + ".png")
-                plt.close()
-    
+        self.make_file(names[0])
+        plt.xticks(np.arange(params[0], params[1], step=25))
+        plt.plot(data[2][params[0]:params[1]*4+1], data[0][params[0]:params[1]*4+1], label="RMSE")
+        plt.plot(data[2][params[0]:params[1]*4+1], data[1][params[0]:params[1]*4+1], label="SPREAD")
+        plt.legend()
+        plt.grid(color='k', linestyle='dotted', linewidth=0.5)
+        plt.xlabel(names[2])
+        plt.ylabel(names[3])
+        plt.title(names[4])
+        plt.savefig(names[0] + names[1])
+        plt.close()
 
     def VarianceInfrationDelta(self, data, params, names):
         plt.figure()
