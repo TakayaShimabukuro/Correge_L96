@@ -45,9 +45,9 @@ class Model_L96:
 
         # progress 1
         Xf[:, 0] = Y[:, 100]
-        Pf[:, :, 0] = np.diag([10]*self.N)
+        Pf[:, :, 0] = np.diag([25]*self.N)
         Xa[:, 0] = Y[:, 100]
-        Pa[:, :, 0] = np.diag([10]*self.N)
+        Pa[:, :, 0] = np.diag([25]*self.N)
         
         for t in range(1, step):
             # progress 2
@@ -57,7 +57,7 @@ class Model_L96:
 
             # progress 3
             K = (Pf[:, :, t]@H.T)@np.linalg.inv(H@Pf[:, :, t]@H.T + R)
-            Xa[:, t] = Xf[:, t] + K@(Y[:,t-1] - Xf[:, t])
+            Xa[:, t] = Xf[:, t] + K@(Y[:,t] - Xf[:, t])
             Pa[:, :, t] = (I-K@H)@Pf[:, :, t]
 
         # progress 4
