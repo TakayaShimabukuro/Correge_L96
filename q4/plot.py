@@ -7,6 +7,8 @@ from sympy.codegen.cfunctions import log10
 from scipy.stats import norm
 from scipy.interpolate import interp1d
 from logging import getLogger, DEBUG, basicConfig
+import matplotlib.cm as cm
+from matplotlib.colors import ListedColormap, BoundaryNorm, rgb2hex
 
 logger = getLogger(__name__)
 
@@ -16,6 +18,21 @@ class Plot_Methods:
         self.path = path
         self.make_file(self.path)
     
+    def get_color_code(self, cname,num):
+
+        cmap = cm.get_cmap(cname,num)
+
+        code_list =[]
+        for i in range(cmap.N):
+            rgb = cmap(i)[:3]
+            print(rgb2hex(rgb))
+            code_list.append(rgb2hex(rgb))
+
+        return code_list
+    
+    def createCorlorMap(self, color, bounds):
+        color_code = self.get_color_code(color,len(bounds)+1)
+        return ListedColormap(color_code)
 
     def make_file(self, path):
         try:
@@ -127,3 +144,35 @@ class Plot_Methods:
         plt.title(title)
         plt.savefig(self.path + "InflationRatio/InflationRatio.png")
         plt.close()
+    
+
+    def AnalysisErrCovariance(self, d, Pas):
+        x_step=[5]
+        x_start=[0]
+        x_end=[41]
+        day = [1, 10, 300]
+        x_label = "time(day)"
+        y_label = "RMSE"
+        title = "Lecture4-EKF"
+        self.make_file(self.path+"/AnalysisErrCovariance")
+
+        j = 0
+        bounds = [-0.5, -0.3, -0.1, -0.05, -0.01, 0, 0.01, 0.05, 0.1, 0.3, 0.5]
+        cmap = self.createCorlorMap("coolwarm", bounds)
+        norm = BoundaryNorm(bounds,cmap.N)
+        for i in range(len(d)):
+            for k in range(len(day)):
+                fig = plt.figure()
+                plt.xticks(np.arange(x_start[j], x_end[j], step=x_step[j]))
+                #plt.contourf(Pas[i][:, :, day[k]*4], cmap='RdYlBu',  levels=11)
+                #plt.imshow(Pas[i][:, :, day[k]*4], cmap='RdYlBu', origin='upper', vmin=-0.5, vmax=0.5)
+                sc = plt.imshow(Pas[i][:, :, day[k]*4], cmap=cmap,norm=norm, vmin=min(bounds),vmax=max(bounds))
+                plt.legend()
+                plt.colorbar(sc,aspect=30,shrink=0.7)
+                plt.grid(color='k', linestyle='dotted', linewidth=0.5)
+                plt.xlim(x_start[j],x_end[j]-1)
+                plt.xlabel(x_label)
+                plt.ylabel(y_label)
+                plt.title(title)
+                plt.savefig(self.path + "AnalysisErrCovariance/AnalysisErrCovariance-delta-" + str(d[i])+"-day-"+str(day[k])+ ".png")
+                plt.close()
