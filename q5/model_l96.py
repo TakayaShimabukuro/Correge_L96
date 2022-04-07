@@ -64,27 +64,19 @@ class Model_L96:
         # progress 4
         return Xf, Pf, Xa, Pa
     
-    def analyze_3DVAR(self, Y, B):
-        # init setting
-        step = len(Y[0])
+    # 3DVAR
+    def analyze_3DVAR(self, Y, B, step):
         Xb = np.zeros((self.N, step))
         Xa = np.zeros((self.N, step))
         H = np.identity(self.N)
         R = np.identity(self.N)
-
-        # progress 1
-        Xb[:, 0] = Y[:, 100]
         Xa[:, 0] = Y[:, 100]
-        
-        for t in range(1, step):
-            # progress 2      
-            Xb[:, t] = self.RK4(Xa[:, t-1])
 
-            # progress 3
+        for t in range(1, step):
+            Xb[:, t] = self.RK4(Xa[:, t-1])
             K = (B@H.T)@np.linalg.inv(H@B@H.T + R)
             Xa[:, t] = Xb[:, t] + K@(Y[:,t] - H@Xb[:, t])
 
-        # progress 4
         return Xa
 
 
@@ -113,7 +105,7 @@ class Model_L96:
     def RMSE(self, X1, X2, step):
         rmse = np.zeros((step))
         for i in range(step):
-            sub = X1[:, i] - X2[:, i]
+            sub = X1[1:, i] - X2[1:, i]
             rmse[i] = np.sqrt(np.mean(sub**2))
         return rmse
     
@@ -131,5 +123,5 @@ class Model_L96:
         for j in range(1, step):
             X1 = self.RK4(X1)
             Xn[:, j] = X1[:]
-            t[j] =self.dt*j*5
+            t[j] =self.dt*j*5.0
         return Xn, t

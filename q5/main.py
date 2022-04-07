@@ -36,7 +36,7 @@ logger.info('Prosess Start!!')
 step_2year = 2848
 step_t = 1424
 #d = np.arange(0, 0.20, 0.025)
-d = [0.00]
+d = [0.05]
 B_step = np.arange(0.05, 0.625, 0.025)
 path = "./q5/result/"
 l96 = Model_L96(N, F, dt, delta, d)
@@ -64,14 +64,16 @@ Xt = Xt_2year[:, step_t:step_2year]
 # 3. 真値にノイズを付加する
 logger.info('Prosess 3')
 Y = np.zeros((N, step_t))
+np.random.seed(0)
 for i in range(step_t):
-    Y[:, i] = Xt[:, i] + np.random.normal(loc=mu, scale=sigma, size=N)
+    noise = np.random.normal(loc=mu, scale=sigma, size=N)
+    Y[:, i] = Xt[:, i] + noise
 
 # 4.3DVAR
 logger.info('Prosess 4')
 for i in range(len(B_step)):
     B = np.diag([B_step[i]]*N)
-    Xa = l96.analyze_3DVAR(Y, B)
+    Xa = l96.analyze_3DVAR(Y, B, step_t)
     Xas.append(Xa)
 
 #5. get RMSE
@@ -79,8 +81,9 @@ logger.info('Prosess 5')
 np.set_printoptions(threshold=np.inf)
 for i in range(len(B_step)):
     Xa_RMSE = l96.RMSE(Xas[i], Xt, step_t)
-    Xa_RMSE_aves.append(np.mean(Xa_RMSE))
-    logger.debug("ave Pf={%f}, ave RMSE(Xa)={%f}", B_step[i], np.mean(Xa_RMSE))
+    Xa_RMSE_Tstep_mean = np.mean(Xa_RMSE[400:])
+    Xa_RMSE_aves.append(Xa_RMSE_Tstep_mean)
+    logger.debug("B={%f}, ave RMSE(Xa)={%f}", B_step[i], Xa_RMSE_Tstep_mean)
 
 #6. Time-mean RMSE
 plot.TimeMeanRMSE(B_step, Xa_RMSE_aves)
