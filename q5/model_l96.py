@@ -64,25 +64,25 @@ class Model_L96:
         # progress 4
         return Xf, Pf, Xa, Pa
     
-    def analyze_3DVAR(self, Y, Pf):
+    def analyze_3DVAR(self, Y, B):
         # init setting
         step = len(Y[0])
-        Xf = np.zeros((self.N, step))
+        Xb = np.zeros((self.N, step))
         Xa = np.zeros((self.N, step))
         H = np.identity(self.N)
         R = np.identity(self.N)
 
         # progress 1
-        Xf[:, 0] = Y[:, 100]
+        Xb[:, 0] = Y[:, 100]
         Xa[:, 0] = Y[:, 100]
         
         for t in range(1, step):
             # progress 2      
-            Xf[:, t] = self.RK4(Xa[:, t-1])
+            Xb[:, t] = self.RK4(Xa[:, t-1])
 
             # progress 3
-            K = (Pf@H.T)@np.linalg.inv(H@Pf@H.T + R)
-            Xa[:, t] = Xf[:, t] + K@(Y[:,t] - H@Xf[:, t])
+            K = (B@H.T)@np.linalg.inv(H@B@H.T + R)
+            Xa[:, t] = Xb[:, t] + K@(Y[:,t] - H@Xb[:, t])
 
         # progress 4
         return Xa

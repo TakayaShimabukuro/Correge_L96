@@ -37,7 +37,7 @@ step_2year = 2848
 step_t = 1424
 #d = np.arange(0, 0.20, 0.025)
 d = [0.00]
-B = np.arange(0.05, 0.625, 0.025)
+B_step = np.arange(0.05, 0.625, 0.025)
 path = "./q5/result/"
 l96 = Model_L96(N, F, dt, delta, d)
 plot = Plot_Methods(path)
@@ -70,19 +70,19 @@ for i in range(step_t):
 
 # 4.3DVAR
 logger.info('Prosess 4')
-for i in range(len(B)):
-    Pf = np.diag([B[i]]*N)
-    Xa = l96.analyze_3DVAR(Y, Pf)
+for i in range(len(B_step)):
+    B = np.diag([B_step[i]]*N)
+    Xa = l96.analyze_3DVAR(Y, B)
     Xas.append(Xa)
 
 
 #5. get RMSE
 logger.info('Prosess 5')
 np.set_printoptions(threshold=np.inf)
-for i in range(len(B)):
+for i in range(len(B_step)):
     Xa_RMSE = l96.RMSE(Xas[i], Xt, step_t)
     Xa_RMSE_aves.append(np.mean(Xa_RMSE))
-    logger.debug("ave Pf={%f}, ave RMSEXa={%f}", B[i], np.mean(Xa_RMSE))
+    logger.debug("ave Pf={%f}, ave RMSE(Xa)={%f}", B_step[i], np.mean(Xa_RMSE))
 
 #6. Time-mean RMSE
 plot.TimeMeanRMSE(Xa_RMSE_aves, B)
