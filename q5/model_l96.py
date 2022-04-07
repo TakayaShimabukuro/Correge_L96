@@ -78,7 +78,32 @@ class Model_L96:
             Xa[:, t] = Xb[:, t] + K@(Y[:,t] - H@Xb[:, t])
 
         return Xa
+    
+    # 3DVAR-case
+    def analyze_3DVAR_case(self, Y_all, B, step, delate_queue):
+        n_size = len(delate_queue)
+        Xb = np.zeros((self.N, step))
+        Xa = np.zeros((self.N, step))
+        R = np.identity(n_size)
+        H = np.delete(np.identity(self.N), delate_queue, axis=0)
+        Y = np.delete(Y_all, delate_queue, axis=0)
+        '''
+        logger.debug(n_size)
+        logger.debug(Xb.shape)
+        logger.debug(Xa.shape)
+        logger.debug(H.shape)
+        logger.debug(Y.shape)
+        logger.debug(H)
+        '''
+        
+        Xa[:, 0] = Y_all[:, 100]
 
+        for t in range(1, step):
+            Xb[:, t] = self.RK4(Xa[:, t-1])
+            K = (B@H.T)@np.linalg.inv(H@B@H.T + R)
+            Xa[:, t] = Xb[:, t] + K@(Y[:,t] - H@Xb[:, t])
+
+        return Xa
 
     # Mを導出
     def get_M(self, X):
@@ -125,3 +150,8 @@ class Model_L96:
             Xn[:, j] = X1[:]
             t[j] =self.dt*j*5.0
         return Xn, t
+    
+    def PartOfdata(self, data_all, delate_queue):
+        data = np.delete(data_all, delate_queue, axis=0)
+        data = np.delete(data, delate_queue, axis=1)
+        return data

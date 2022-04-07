@@ -7,19 +7,23 @@ from plot import Plot_Methods
 from model_l96 import Model_L96
 
 
-''' [code sample]
-        logger.debug('--- t---')
-        logger.debug(t.shape)
-        logger.debug('--- X---')
-        logger.debug(X.shape)
-        logger.debug('--- Y---')
-        logger.debug(Y.shape)
-        logger.debug('--- X1---')
-        logger.debug(X1.shape)
-        logger.debug('--- X2---')
-        logger.debug(X2.shape)
-        logger.info('------------------------------')
 '''
+[code sample]
+logger.debug('--- t---')
+logger.debug(t.shape)
+logger.debug('--- X---')
+logger.debug(X.shape)
+logger.debug('--- Y---')
+logger.debug(Y.shape)
+logger.debug('--- X1---')
+logger.debug(X1.shape)
+logger.debug('--- X2---')
+logger.debug(X2.shape)
+logger.info('------------------------------'
+    plot.Debug(Xa_case1, "Xa_case1-"+str(i))
+    plot.Debug(Xa_case2, "Xa_case2-"+str(i))
+'''
+
 # public parameter
 logger = getLogger(__name__)
 logger.setLevel(DEBUG)
@@ -39,15 +43,22 @@ step_t = 1424
 d = [0.05]
 B_step = np.arange(0.05, 0.625, 0.025)
 path = "./q5/result/"
+path_debug = "./q5/Debug/"
 l96 = Model_L96(N, F, dt, delta, d)
-plot = Plot_Methods(path)
+plot = Plot_Methods(path, path_debug)
 Xfs = []
 Pfs = []
 Xas = []
+Xas_case1 = []
+Xas_case2 = []
 Pas = []
 Xas_RMSE = []
 Pas_Spread = []
 Xa_RMSE_aves = []
+Xa_RMSE_aves_case1 = []
+Xa_RMSE_aves_case2 = []
+delate_queue1=np.arange(1, 40, 2)
+delate_queue2=np.arange(0, 20, 1)
 
 # 1. L96を2年分シミュレーションする
 logger.info('Prosess 1')
@@ -83,10 +94,29 @@ for i in range(len(B_step)):
     Xa_RMSE = l96.RMSE(Xas[i], Xt, step_t)
     Xa_RMSE_Tstep_mean = np.mean(Xa_RMSE[400:])
     Xa_RMSE_aves.append(Xa_RMSE_Tstep_mean)
-    logger.debug("B={%f}, ave RMSE(Xa)={%f}", B_step[i], Xa_RMSE_Tstep_mean)
+    #logger.debug("B={%f}, ave RMSE(Xa)={%f}", B_step[i], Xa_RMSE_Tstep_mean)
+
+# 4-2.3DVAR-case
+logger.info('Prosess 4-2')
+for i in range(len(B_step)):
+    B = np.diag([B_step[i]]*N)
+    Xa_case1 = l96.analyze_3DVAR_case(Y, B, step_t, delate_queue1)
+    Xa_case2 = l96.analyze_3DVAR_case(Y, B, step_t, delate_queue2)
+    Xas_case1.append(Xa_case1)
+    Xas_case2.append(Xa_case2)
+
+
+#5-2. get RMSE-case
+logger.info('Prosess 5')
+for i in range(len(B_step)):
+    Xa_RMSE_aves_case1.append(np.mean(l96.RMSE(Xas_case1[i], Xt, step_t)[400:]))
+    Xa_RMSE_aves_case2.append(np.mean(l96.RMSE(Xas_case2[i], Xt, step_t)[400:]))
 
 #6. Time-mean RMSE
 plot.TimeMeanRMSE(B_step, Xa_RMSE_aves)
+
+#7. Time-mean RMSE
+plot.TimeMeanRMSECase(B_step, Xa_RMSE_aves, Xa_RMSE_aves_case1, Xa_RMSE_aves_case2)
 
 '''
     # 4. Kalman Filter

@@ -14,9 +14,11 @@ logger = getLogger(__name__)
 
 
 class Plot_Methods:
-    def __init__(self, path):
+    def __init__(self, path, path_debug):
         self.path = path
+        self.path_debug = path_debug
         self.make_file(self.path)
+        self.make_file(self.path_debug)
     
     def get_color_code(self, cname,num):
 
@@ -198,4 +200,37 @@ class Plot_Methods:
         plt.ylabel(y_label)
         plt.title(title)
         plt.savefig(self.path + "TimeMeanRMSE/TimeMeanRMSE.png")
+        plt.close()
+    
+    def TimeMeanRMSECase(self, B_step, Xas_RMSE, Xas_RMSE_case1, Xas_RMSE_case2):
+        self.make_file(self.path+"/TimeMeanRMSECase")
+        x_step=[0.1]
+        x_start=[0.00]
+        x_end=[0.7]
+        y_step=[0.5]
+        y_start=[0.00]
+        y_end=[3.2]
+        x_label = "B"
+        y_label = "ave RMSE(Time mean)"
+        title = "Lecture5-3DVAR"
+        j = 0
+        plt.figure()
+        plt.plot(B_step, Xas_RMSE, marker="o",fillstyle='none', color="b", linestyle="dashed", lw=0.8, label="XasRMSEAll")
+        plt.plot(B_step, Xas_RMSE_case1, marker="o",fillstyle='none', color="r", linestyle="dashed", lw=0.8, label="XasRMSEcase1")
+        plt.plot(B_step, Xas_RMSE_case2, marker="o",fillstyle='none', color="y", linestyle="dashed", lw=0.8, label="XasRMSEcase2")
+        plt.grid(color='k', linestyle='dotted', linewidth=0.5)
+        plt.xlim(x_start[j],x_end[j]-x_step[j])
+        plt.legend()
+        plt.xlabel(x_label)
+        plt.ylabel(y_label)
+        plt.title(title)
+        plt.savefig(self.path + "TimeMeanRMSECase/TimeMeanRMSECase.png")
+        plt.close()
+    
+    def Debug(self, data, name):
+        title = "Lecture5-3DVAR"
+        plt.figure()
+        plt.imshow(data)
+        plt.title(title)
+        plt.savefig(self.path_debug + name + ".png")
         plt.close()
