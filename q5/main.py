@@ -67,14 +67,12 @@ Y = np.zeros((N, step_t))
 for i in range(step_t):
     Y[:, i] = Xt[:, i] + np.random.normal(loc=mu, scale=sigma, size=N)
 
-
 # 4.3DVAR
 logger.info('Prosess 4')
 for i in range(len(B_step)):
     B = np.diag([B_step[i]]*N)
     Xa = l96.analyze_3DVAR(Y, B)
     Xas.append(Xa)
-
 
 #5. get RMSE
 logger.info('Prosess 5')
@@ -85,8 +83,7 @@ for i in range(len(B_step)):
     logger.debug("ave Pf={%f}, ave RMSE(Xa)={%f}", B_step[i], np.mean(Xa_RMSE))
 
 #6. Time-mean RMSE
-plot.TimeMeanRMSE(Xa_RMSE_aves, B)
-
+plot.TimeMeanRMSE(B_step, Xa_RMSE_aves)
 
 '''
     # 4. Kalman Filter
