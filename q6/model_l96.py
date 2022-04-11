@@ -45,31 +45,62 @@ class Model_L96:
         k4 = self.l96(X1 + k3) * self.dt
         return X1 + (k1 + 2.0*k2 + 2.0*k3 + k4) /6.0
     
+    # Mを導出
+    def get_M(self, X):
+        e = np.identity(self.N)
+        M = np.zeros((self.N, self.N))
+
+        np.set_printoptions(threshold=np.inf)
+        for i in range(self.N):
+            a = X + self.delta*e[:, i]
+            b = X
+            M[:, i] = (self.RK4(a)-self.RK4(b)) / self.delta
+
+        return M
+    
+    # PO法によるEnKF
     def EnKF_PO(self, Y, m):
         # init setting
         step = len(Y[0])
         m_len = len(m)
-        Xa = np.zeros((self.N, step))
-        Pa = np.zeros(((self.N, self.N, step)))
+        Xb_sum = np.zeros((self.N, step))
+        Xb_mean = np.zeros((self.N, step))
         H = np.identity(self.N)
         R = np.identity(self.N)
         I = np.identity(self.N)
         M = np.zeros((self.N, self.N))
         Xbs = []
         Pbs = []
+        Xas = []
+        Pas = []
+
         for i in range(m_len):
             Xbs.append(np.zeros((self.N, step)))
             Pbs.append(np.zeros(((self.N, self.N, step))))
-        
+            Xas.append(np.zeros((self.N, step)))
+            Pas.append(np.zeros(((self.N, self.N, step))))
+
+
         # 初期値代入
         for i in range(m_len):
             Xbs[i][:, 0] = Y[:, m[i]]
             Pbs[i][:, :, 0] = np.diag([m[i]]*self.N)
-        Xa[:, 0] = Y[:, 25]
-        Pa[:, :, 0] = np.diag([25]*self.N)
+            Xas[i][:, 0] = Y[:, m[i]]
+            Pas[i][:, :, 0] = np.diag([m[i]]*self.N)
+        Xb_sum = Xas[i]
 
         # 1. Ensemble Prediction (state)
+        for i in range(m_len):
+            for t in range(1, step):
+                Xbs[i][:, t] = self.RK4(Xas[i][:, t-1])
+
+            Xb_sum[:, :] += Xbs[i][:, :]
+        Xb_mean = Xb_sum / m_len
+
+        for i in range(m_len):
+            Xbs[i] -= Xb_mean
         
+        Zb = Xbs / np.sqrt(m_len-1)
 
         # 2. Prediction of Error Covariance (implicitly)
         # 3. Kalman Gain
