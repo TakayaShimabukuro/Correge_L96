@@ -44,3 +44,34 @@ class Model_L96:
         k3 = self.l96(X1 + k2*0.5) * self.dt
         k4 = self.l96(X1 + k3) * self.dt
         return X1 + (k1 + 2.0*k2 + 2.0*k3 + k4) /6.0
+    
+    def EnKF_PO(self, Y, m):
+        # init setting
+        step = len(Y[0])
+        m_len = len(m)
+        Xa = np.zeros((self.N, step))
+        Pa = np.zeros(((self.N, self.N, step)))
+        H = np.identity(self.N)
+        R = np.identity(self.N)
+        I = np.identity(self.N)
+        M = np.zeros((self.N, self.N))
+        Xbs = []
+        Pbs = []
+        for i in range(m_len):
+            Xbs.append(np.zeros((self.N, step)))
+            Pbs.append(np.zeros(((self.N, self.N, step))))
+        
+        # 初期値代入
+        for i in range(m_len):
+            Xbs[i][:, 0] = Y[:, m[i]]
+            Pbs[i][:, :, 0] = np.diag([m[i]]*self.N)
+        Xa[:, 0] = Y[:, 25]
+        Pa[:, :, 0] = np.diag([25]*self.N)
+
+        # 1. Ensemble Prediction (state)
+        
+
+        # 2. Prediction of Error Covariance (implicitly)
+        # 3. Kalman Gain
+        # 4. Analysis (state)
+        # 5. Analysis Error Covariance

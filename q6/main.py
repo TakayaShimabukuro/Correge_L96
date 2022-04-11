@@ -1,5 +1,6 @@
 # 外部ライブラリ
 from logging import getLogger, DEBUG, basicConfig
+from matplotlib.pyplot import step
 import numpy as np
 
 # 内部ライブラリ
@@ -24,6 +25,7 @@ from model_l96 import Model_L96
 logger = getLogger(__name__)
 logger.setLevel(DEBUG)
 basicConfig(filename='console.log', level=DEBUG, filemode='w')
+np.set_printoptions(threshold=np.inf)
 N = 40
 F = 8.0
 dt = 0.05
@@ -38,6 +40,7 @@ step_t = 1424
 #d = np.arange(0, 0.20, 0.025)
 d = [0.00]
 B = np.arange(0.05, 0.625, 0.025)
+m = np.arange(10, 30, 5)
 path = "./q5/result/"
 l96 = Model_L96(N, F, dt, delta, d)
 plot = Plot_Methods(path)
@@ -64,10 +67,12 @@ Xt = Xt_2year[:, step_t:step_2year]
 # 3. 真値にノイズを付加する
 logger.info('Prosess 3')
 Y = np.zeros((N, step_t))
+np.random.seed(0)
 for i in range(step_t):
     Y[:, i] = Xt[:, i] + np.random.normal(loc=mu, scale=sigma, size=N)
 
-
-
+# 4. EnKF
+logger.info('Prosess 4')
+Xa = l96.EnKF_PO(Y, m)
 
 logger.info('Prosess Finish!!')
