@@ -68,70 +68,61 @@ class Model_L96:
         R = np.identity(self.N)
         I = np.identity(self.N)
         M = np.zeros((self.N, self.N))
-        Xb = np.zeros((self.N, step))
-        Pb = np.zeros(((self.N, self.N, step)))
-        Xa = np.zeros((self.N, step))
-        Pa = np.zeros(((self.N, self.N, step)))
 
         # m個格納用
         Xbs = []
         Xas = []
         Pbs = []
         Pas = []
+        dXbs = []
+        Zbs = []
 
         # 1次元として用いるが、転置ができなくなるため2次元で宣言
         Xb_sum = np.zeros((self.N, self.N))
         Xb_mean = np.zeros((self.N, self.N))
         
-        # 1-0 準備
+        # 1-0 準備 OK
         for i in range(m_len):
-            Xbs.append(Xb)
-            Xas.append(Xa)
-            Pbs.append(Pb)
-            Pas.append(Pa)
+            Xbs.append(np.zeros((self.N, step)))
+            Xas.append(np.zeros((self.N, step)))
+            Pbs.append(np.zeros(((self.N, self.N, step))))
+            Pas.append(np.zeros(((self.N, self.N, step))))
 
-        # 1-1 Analysis Ensemble
+        # 1-1 Analysis Ensemble OK
         for i in range(m_len):
             Xbs[i][:, 0] = Y[:, m[i]]
             Pbs[i][:, :, 0] = np.diag([m[i]]*self.N)
             Xas[i][:, 0] = Y[:, m[i]]
             Pas[i][:, :, 0] = np.diag([m[i]]*self.N)
-
+        
+        # 1-2 Ensemble Forecasts OK
         for t in range(1, step):
             for i in range(m_len):
-                # 1-2 Ensemble Forecasts, 時刻tにおける(40,)がm個
                 Xbs[i][:, t] = self.RK4(Xas[i][:, t-1])
-                Xb_sum[:, 0] += Xbs[i][:, t]
-    
-            # 1-3 Ensemble Mean, m個の平均, (40,)
+                Xb_sum[:, 0] = Xb_sum[:, 0] + Xbs[i][:, t]
+                
+            # 1-3 Ensemble Mean OK
             Xb_mean[:, 0] = Xb_sum[:, 0] / m_len
-            logger.debug('Xb_sum={}'.format(Xb_sum))
-            logger.debug('Xb_mean={}'.format(Xb_mean))
-            self.plot.Debug(Xb_sum, "Xb_sum")
-            self.plot.Debug(Xb_mean, "Xb_mean")
-
-            # 1-4 Ensemble Perturbation, (m, 40)
-            dXbs = np.zeros((m_len, self.N))
-           
+        
+            # 1-4 Ensemble Perturbation, m個のdelta Xbを保持 OK
             for i in range(m_len):
-                dXbs[i, :] = Xbs[i, :, t] - Xb_mean
-                #logger.debug('dXbs[i, :]={}'.format(dXbs[i, :]))
+                tmp_delta = np.zeros((self.N, self.N))
+                tmp_delta[:, 0] = Xbs[i][:, t] - Xb_mean[:, 0]
+                dXbs.append(tmp_delta)
             
-            logger.debug('m_len={}'.format(m_len))
-            logger.debug('Xb_mean.shape={}'.format(Xb_mean.shape))
-            logger.debug('dXbs.shape={}'.format(dXbs.shape))
 
-            # 2 Prediction of Error Covariance (implicitly), 
-            Zbs = np.zeros((m_len, self.N))
-            Zb = np.zeros((self.N, self.N)) # 転置がうまくいかないので二次元としている
+            # 2 Prediction of Error Covariance (implicitly) 
             for i in range(m_len):
-                Zb[0, :] = Zbs[i, :]
-                logger.debug('Zb={}'.format(Zb))
-                logger.debug('Zb.shape={}'.format(Zb.shape))
+                tmp_Zb = np.zeros((self.N, self.N))
+                tmp_Zb = dXbs[i]/np.sqrt(m_len-1)
+                Pbs[i][:, :, t] = tmp_Zb@tmp_Zb.T
 
-        
+            
+            logger.debug('Zbs[0][0, 0]={}'.format(Zbs[0][0:3, 0:3]))
+            logger.debug('Zbs[1][0, 0]={}'.format(Zbs[1][0:3, 0:3]))
+            self.plot.Debug(Zbs[0], "Zbs[0]")
+            self.plot.Debug(Zbs[1], "Zbs[1]")
 
-        
 
         # 2. Prediction of Error Covariance (implicitly)
         # 3. Kalman Gain

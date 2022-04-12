@@ -211,9 +211,6 @@ class Plot_Methods:
             RANGE = MAX
         else:
             RANGE = MIN
-        print(MAX)
-        print(MIN)
-
         RANGE = round(RANGE, 1-len(str(RANGE).split('.')[0]))
         n = RANGE/5
         bounds =  [-RANGE, -n*4, -n*3, -n*2, -n, -0.1, 0.1, n, n*2, n*3, n*4, RANGE]
