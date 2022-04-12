@@ -9,6 +9,7 @@ from scipy.interpolate import interp1d
 from logging import getLogger, DEBUG, basicConfig
 import matplotlib.cm as cm
 from matplotlib.colors import ListedColormap, BoundaryNorm, rgb2hex
+import re
 
 logger = getLogger(__name__)
 
@@ -199,3 +200,29 @@ class Plot_Methods:
         plt.title(title)
         plt.savefig(self.path + "TimeMeanRMSE/TimeMeanRMSE.png")
         plt.close()
+    
+    def Debug(self, data, name):
+        self.make_file(self.path+"/Debug")
+        MAX = np.amax(data)
+        MIN = abs(np.amin(data))
+
+        RANGE = 0
+        if(MAX>MIN):
+            RANGE = MAX
+        else:
+            RANGE = MIN
+        print(MAX)
+        print(MIN)
+
+        RANGE = round(RANGE, 1-len(str(RANGE).split('.')[0]))
+        n = RANGE/5
+        bounds =  [-RANGE, -n*4, -n*3, -n*2, -n, -0.1, 0.1, n, n*2, n*3, n*4, RANGE]
+        cmap = self.createCorlorMap("bwr", bounds)
+        norm = BoundaryNorm(bounds,cmap.N)
+
+        plt.figure()
+        plt.imshow(data,cmap=cmap,norm=norm, vmin=min(bounds),vmax=max(bounds))
+        plt.colorbar()
+        plt.savefig(self.path + "Debug/" + name + ".png")
+        plt.close()
+

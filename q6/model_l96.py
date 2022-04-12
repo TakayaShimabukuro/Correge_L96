@@ -6,12 +6,13 @@ logger = getLogger(__name__)
 
 class Model_L96:
     # 初期値
-    def __init__(self, N, F, dt, delta, d):
+    def __init__(self, N, F, dt, delta, d, plot):
         self.N = N
         self.F = F
         self.dt = dt
         self.delta = delta 
         self.d = d
+        self.plot = plot
 
     # X1[40, 1]を初期値とするstep分のシミュレーションを行う。
     def analyze_model(self, Xn, X1_tmp, step):
@@ -67,31 +68,47 @@ class Model_L96:
         R = np.identity(self.N)
         I = np.identity(self.N)
         M = np.zeros((self.N, self.N))
-        Xbs = np.zeros(((m_len, self.N, step)))
-        Pbs = np.zeros((((m_len, self.N, self.N, step))))
-        Xas = np.zeros(((m_len, self.N, step)))
-        Pas = np.zeros((((m_len, self.N, self.N, step))))
-        
+        Xb = np.zeros((self.N, step))
+        Pb = np.zeros(((self.N, self.N, step)))
+        Xa = np.zeros((self.N, step))
+        Pa = np.zeros(((self.N, self.N, step)))
 
+        # m個格納用
+        Xbs = []
+        Xas = []
+        Pbs = []
+        Pas = []
+
+        # 1次元として用いるが、転置ができなくなるため2次元で宣言
+        Xb_sum = np.zeros((self.N, self.N))
+        Xb_mean = np.zeros((self.N, self.N))
+        
+        # 1-0 準備
+        for i in range(m_len):
+            Xbs.append(Xb)
+            Xas.append(Xa)
+            Pbs.append(Pb)
+            Pas.append(Pa)
 
         # 1-1 Analysis Ensemble
         for i in range(m_len):
-            Xbs[i, :, 0] = Y[:, m[i]]
-            Pbs[i, :, :, 0] = np.diag([m[i]]*self.N)
-            Xas[i, :, 0]  = Y[:, m[i]]
-            Pas[i, :, :, 0] = np.diag([m[i]]*self.N)
+            Xbs[i][:, 0] = Y[:, m[i]]
+            Pbs[i][:, :, 0] = np.diag([m[i]]*self.N)
+            Xas[i][:, 0] = Y[:, m[i]]
+            Pas[i][:, :, 0] = np.diag([m[i]]*self.N)
 
         for t in range(1, step):
-            Xb_sum = np.zeros(self.N)
-            Xb_mean = np.zeros(self.N)
-            
             for i in range(m_len):
                 # 1-2 Ensemble Forecasts, 時刻tにおける(40,)がm個
-                Xbs[i, :, t] = self.RK4(Xas[i, :, t-1])
-                Xb_sum += Xbs[i, :, t]
+                Xbs[i][:, t] = self.RK4(Xas[i][:, t-1])
+                Xb_sum[:, 0] += Xbs[i][:, t]
     
             # 1-3 Ensemble Mean, m個の平均, (40,)
-            Xb_mean = Xb_sum / m_len
+            Xb_mean[:, 0] = Xb_sum[:, 0] / m_len
+            logger.debug('Xb_sum={}'.format(Xb_sum))
+            logger.debug('Xb_mean={}'.format(Xb_mean))
+            self.plot.Debug(Xb_sum, "Xb_sum")
+            self.plot.Debug(Xb_mean, "Xb_mean")
 
             # 1-4 Ensemble Perturbation, (m, 40)
             dXbs = np.zeros((m_len, self.N))
@@ -104,10 +121,14 @@ class Model_L96:
             logger.debug('Xb_mean.shape={}'.format(Xb_mean.shape))
             logger.debug('dXbs.shape={}'.format(dXbs.shape))
 
-            # 2 Prediction of Error Covariance (implicitly)
-            Zb = dXbs / np.sqrt(m_len-1)
-            tmp = Zb@Zb.T
-            logger.debug('tmp.shape={}'.format(tmp.shape))
+            # 2 Prediction of Error Covariance (implicitly), 
+            Zbs = np.zeros((m_len, self.N))
+            Zb = np.zeros((self.N, self.N)) # 転置がうまくいかないので二次元としている
+            for i in range(m_len):
+                Zb[0, :] = Zbs[i, :]
+                logger.debug('Zb={}'.format(Zb))
+                logger.debug('Zb.shape={}'.format(Zb.shape))
+
         
 
         
