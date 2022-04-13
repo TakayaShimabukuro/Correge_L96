@@ -40,7 +40,7 @@ step_t = 1460 # 4step 1day
 #d = np.arange(0, 0.20, 0.025)
 d = [0.00]
 B = np.arange(0.05, 0.625, 0.025)
-m = np.arange(20, 120, 1)
+m = np.arange(20, 50, 1)
 logger.info('-----member : {}------'.format(str(len(m))))
 path = "./q6/result/"
 plot = Plot_Methods(path)
