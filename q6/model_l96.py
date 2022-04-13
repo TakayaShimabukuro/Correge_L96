@@ -63,9 +63,9 @@ class Model_L96:
     # RMSEを取得
     def RMSE(self, X1, X2, step):
         rmse = np.zeros((step))
-        for i in range(step):
-            sub = X1[1:, i] - X2[1:, i]
-            rmse[i] = np.sqrt(np.mean(sub**2))
+        for t in range(step):
+            sub = X1[:, 0, t] - X2[:, 0, t]
+            rmse[t] = np.sqrt(np.mean(sub**2))
         return rmse
 
     # Spreadを取得
@@ -74,14 +74,20 @@ class Model_L96:
         for t in range(step):
             tmp.append(np.sqrt(np.trace(P[:, :, t])/len(P[:, :, t])))
         return tmp
+    
+    # Spreadを取得
+    def Reshape(self, Y, step):
+        YO = np.zeros(((self.N, self.N, step)))
+        for t in range(step):
+            YO[:, 0, t] = Y[:, t]
+        return YO
 
     # PO法によるEnKF
-    def EnKF_PO(self, Y, m, noise):
+    def EnKF_PO(self, Y, m, noise, step):
         # init setting
-        step = len(Y[0])
         m_len = len(m)
-        Xa = np.zeros((self.N, step))
-        Pa = np.zeros((self.N, self.N, step))
+        Xa = np.zeros(((self.N, self.N, step)))
+        Pa = np.zeros(((self.N, self.N, step)))
         H = np.identity(self.N)
         R = np.identity(self.N)
         I = np.identity(self.N)
@@ -89,22 +95,20 @@ class Model_L96:
         # m個格納用
         Xbs = []
         Xas = []
-        Pbs = []
-        Pas = []
 
         # 1-0 準備 OK
         for i in range(m_len):
-            Xbs.append(np.zeros((self.N, step)))
-            Pbs.append(np.zeros(((self.N, self.N, step))))
-            Xas.append(np.zeros((self.N, step)))
-            Pas.append(np.zeros(((self.N, self.N, step))))
+            Xbs.append(np.zeros(((self.N, self.N, step))))
+            Xas.append(np.zeros(((self.N, self.N, step))))
 
         for i in range(m_len):
-            Xbs[i][:, 0] = Y[:, m[i]]+noise+10
-            Pbs[i][:, :, 0] = np.diag([m[i]]*self.N)
-            Xas[i][:, 0] = Y[:, m[i]]+noise+10
-            Pas[i][:, :, 0] = np.diag([m[i]]*self.N)
-            logger.debug('Y[:, m[i]]\n{}'.format(Y[:, m[i]]))
+            Xbs[i][:, 0, 0] = Y[:, 0, m[i]]+noise
+            Xas[i][:, 0, 0] = Y[:, 0, m[i]]+noise
+
+        logger.info("------------------------------------------------")
+        logger.debug('Xbs[0][0:5, 0:5, 0]\n{}'.format(Xbs[0][0:5, 0:5, 0]))
+        logger.debug('Xas[0][0:5, 0:5, 0]\n{}'.format(Xas[0][0:5, 0:5, 0]))
+        logger.debug('Y[0:5, 0:5, 0]\n{}'.format(Y[0:5, 0:5, 0]))
 
         for t in range(1, step):
             Xb_sum = np.zeros((self.N, self.N))
@@ -112,56 +116,62 @@ class Model_L96:
 
             for i in range(m_len):
                 # 1 Ensemble Prediction (state)
-                Xbs[i][:, t] = self.RK4(Xas[i][:, t-1])
-                Xb_sum[:, 0] = Xb_sum[:, 0] + Xbs[i][:, t]
+                Xbs[i][:, 0, t] = self.RK4(Xas[i][:, 0, t-1])
+                Xb_sum[:, 0] = np.add(Xb_sum[:, 0], Xbs[i][:, 0, t])
+            
+            dXb = np.zeros((self.N, self.N))
+            Zb = np.zeros((self.N, self.N))
+            Yb = np.zeros((self.N, self.N))
 
             for i in range(m_len):
-                dXb = np.zeros((self.N, self.N))
-                Zb = np.zeros((self.N, self.N))
-                Yb = np.zeros((self.N, self.N))
-
-                dXb[:, 0] = Xbs[i][:, t] - (Xb_sum[:, 0] / m_len)
-
-                Zb[:, 0]  = dXb[:, 0] /np.sqrt(m_len-1)
+                
+                dXb[:, 0] = np.subtract(Xbs[i][:, 0, t], (Xb_sum[:, 0] / m_len))
+                Zb[:, 0]  = dXb[:, 0] / np.sqrt(m_len-1)
                 Yb = H@Zb
 
                 # 2 Prediction of Error Covariance (implicitly)
-                Pbs[i][:, :, t] = Zb@Zb.T
 
                 # 3 Kalman Gain
-                K = Zb@np.linalg.inv(I+Yb.T@np.linalg.inv(R)@ Yb)@Yb.T@np.linalg.inv(R)
+                tmp_1 = np.add(I, Yb.T@np.linalg.inv(R)@Yb)
+                K = Zb@np.linalg.inv(tmp_1)@Yb.T@np.linalg.inv(R)
 
                 # 4 Analysis (state)
-                Xas[i][:, t] = Xbs[i][:, t] + K@(Y[:, t] + noise - H@Xbs[i][:, t])
-                Xa_sum[:, 0] = Xa_sum[:, 0] + Xas[i][:, t]
+                tmp_noise = np.random.normal(loc=0, scale=1, size=(self.N, self.N))
+                tmp_1 = K@np.subtract(np.add(Y[:, 0, t], tmp_noise[:, 0]), H@Xbs[i][:, 0, t])
 
-                logger.debug('Xbs[i][:, t]\n{}'.format(Xbs[i][:, t] ))
-                logger.debug('dXb\n{}'.format(dXb[0:3, 0:3]))
-                logger.debug('Pbs[i][:, :, t]\n{}'.format(Pbs[i][0:3, 0:3, t]))
-                logger.debug('Zb\n{}'.format(Zb[0:3, 0:3]))
-                logger.debug('Yb\n{}'.format(Yb[0:3, 0:3]))
-                logger.debug('K\n{}'.format(K[0:3, 0:3]))
-                logger.debug('Xa_sum[:, 0]\n{}'.format(Xa_sum[0:3, 0:3]))
-
-            Xa[:, t] = Xa_sum[:, 0] / m_len
+                Xas[i][:, 0, t] = np.add(Xbs[i][:, 0, t], tmp_1)
+                Xa_sum[:, 0] = Xa_sum[:, 0] + Xas[i][:, 0, t]
+            
+            Xa[:, 0, t] = Xa_sum[:, 0] / m_len
+            
+            if(t < 2):
+                logger.info("------------------------------------------------")
+                logger.debug('Xas[i][0:5, 0:5, t]\n{}'.format(Xas[i][0:5, 0:5, t]))
+                logger.debug('Xa[0:5, 0:5, t]\n{}'.format(Xa[0:5, 0:5, t]))
+                logger.debug('Xa_sum[0:5, 0:5]\n{}'.format(Xa_sum[0:5, 0:5]))
+                logger.debug('dXb[0:5, 0:5]\n{}'.format(dXb[0:5, 0:5]))
+                logger.debug('Zb[0:5, 0:5]\n{}'.format(Zb[0:5, 0:5]))
+                logger.debug('Yb[0:5, 0:5]\n{}'.format(Yb[0:5, 0:5]))
+                logger.debug('K[0:3, 0:3]\n{}'.format(K[0:3, 0:3]))
 
             # Pa
             Pa_sum = np.zeros((self.N, self.N))
+            dXa = np.zeros((self.N, self.N))
+            Za = np.zeros((self.N, self.N))
+            
             for i in range(m_len):
-                dXa = np.zeros((self.N, self.N))
-                Za = np.zeros((self.N, self.N))
-
-                dXa[:, 0] = Xas[i][:, t] - (Xa_sum[:, 0] / m_len)
+                dXa[:, 0] = Xas[i][:, 0, t] - (Xa_sum[:, 0] / m_len)
                 Za[:, 0] = dXa[:, 0]/np.sqrt(m_len-1)
+                Pa_sum = np.add(Za@Za.T, Pa_sum)
 
-                Pas[i][:, :, t] = Za@Za.T
-                Pa_sum = Pa_sum + Pas[i][:, :, t]
+            Pa[:, :, t] = Pa_sum / m_len
 
-            Pa[:, :, t] = Pa_sum[:, :] / m_len
-
-            logger.debug('Xa[:, %d]\n{}'.format(Xa[:, t], t))
-            logger.debug('Pa[:, :, %d]\n{}'.format( Pa[:, :, t], t))
-
+            if(t < 2):
+                logger.info("------------------------------------------------")
+                logger.debug('Pa_sum[:, :]\n{}'.format(Pa_sum[0:5, 0:5]))
+                logger.debug('Pa[0:5, 0:5, t]\n{}'.format(Pa[0:5, 0:5, t]))
+                logger.debug('dXa[:, 0]\n{}'.format(dXa[0:5, 0:5]))
+                logger.debug('Za[:, 0] \n{}'.format(Za[0:5, 0:5] ))
             
         return Xa, Pa
 
