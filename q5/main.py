@@ -59,6 +59,7 @@ Xa_RMSE_aves_case1 = []
 Xa_RMSE_aves_case2 = []
 delate_queue1=np.arange(1, 40, 2)
 delate_queue2=np.arange(0, 20, 1)
+spinup = 400
 
 # 1. L96を2年分シミュレーションする
 logger.info('Prosess 1')
@@ -92,12 +93,16 @@ logger.info('Prosess 5')
 np.set_printoptions(threshold=np.inf)
 for i in range(len(B_step)):
     Xa_RMSE = l96.RMSE(Xas[i], Xt, step_t)
-    Xa_RMSE_Tstep_mean = np.mean(Xa_RMSE[400:])
+    Xa_RMSE_Tstep_mean = np.mean(Xa_RMSE[spinup:])
     Xa_RMSE_aves.append(Xa_RMSE_Tstep_mean)
-    #logger.debug("B={%f}, ave RMSE(Xa)={%f}", B_step[i], Xa_RMSE_Tstep_mean)
+    logger.debug("B={%f}, ave RMSE(Xa)={%f}", B_step[i], Xa_RMSE_Tstep_mean)
 
-# 4-2.3DVAR-case
-logger.info('Prosess 4-2')
+#6. Time-mean RMSE
+plot.TimeMeanRMSE(B_step, Xa_RMSE_aves, str(spinup))
+
+
+# 7.3DVAR-case
+logger.info('Prosess 7')
 for i in range(len(B_step)):
     B = np.diag([B_step[i]]*N)
     Xa_case1 = l96.analyze_3DVAR_case(Y, B, step_t, delate_queue1)
@@ -106,53 +111,16 @@ for i in range(len(B_step)):
     Xas_case2.append(Xa_case2)
 
 
-#5-2. get RMSE-case
-logger.info('Prosess 5')
+# 8. get RMSE-case
+logger.info('Prosess 8')
 for i in range(len(B_step)):
     Xa_RMSE_aves_case1.append(np.mean(l96.RMSE(Xas_case1[i], Xt, step_t)[400:]))
     Xa_RMSE_aves_case2.append(np.mean(l96.RMSE(Xas_case2[i], Xt, step_t)[400:]))
 
-#6. Time-mean RMSE
-plot.TimeMeanRMSE(B_step, Xa_RMSE_aves)
-
-#7. Time-mean RMSE
+# 9. Time-mean RMSE
+logger.info('Prosess 9')
 plot.TimeMeanRMSECase(B_step, Xa_RMSE_aves, Xa_RMSE_aves_case1, Xa_RMSE_aves_case2)
 
-'''
-    # 4. Kalman Filter
-    logger.info('Prosess 4')
-    for i in range(len(d)):
-        Xf, Pf, Xa, Pa = l96.KF(Y, d[i])
-        Xfs.append(Xf)
-        Pfs.append(Pf)
-        Xas.append(Xa)
-        Pas.append(Pa)
 
-    # 5. Variance Inflation
-    logger.info('Prosess 5')
-    for i in range(len(d)):
-        Xas_RMSE.append(l96.RMSE(Xas[i], Xt, step_t))
-        Pas_Spread.append(l96.Spread(Pas[i]))
-    #plot.VarianceInfration(d, t_2year, Xas_RMSE, Pas_Spread)
-
-    # 6. First Variable X(1) as a func. of time
-    logger.info('Prosess 6')
-    #plot.X1asFuncOfTime(d, t_2year, Xt, Y, Xfs, Xas)
-
-    # 7. Analysis RMSE
-    logger.info('Prosess 7')
-    #plot.AnalysisRMSE(d, t_2year, Xas_RMSE)
-
-    # 8. Sensitivity to Infl. Factor
-    logger.info('Prosess 8')
-    rmse_aves = l96.get_RMSE_Ave(d, Xas_RMSE)
-    #if rmse_aves[2] < 0.4:
-    FLG = False
-    #plot.InflationRatio(d, rmse_aves)
-
-    # 9. Analysis Error Covariance Pa
-    logger.info('Prosess 9')
-    #plot.AnalysisErrCovariance(d, Pas)
-    '''
 
 logger.info('Prosess Finish!!')

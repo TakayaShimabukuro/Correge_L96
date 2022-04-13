@@ -35,12 +35,13 @@ sigma = 1.0
 
 # local parameter
 logger.info('Prosess Start!!')
-step_2year = 2848
-step_t = 1424
+step_2year = 2920
+step_t = 1460 # 4step 1day 
 #d = np.arange(0, 0.20, 0.025)
 d = [0.00]
 B = np.arange(0.05, 0.625, 0.025)
-m = np.arange(10, 30, 5)
+m = np.arange(20, 120, 1)
+logger.info('-----member : {}------'.format(str(len(m))))
 path = "./q6/result/"
 plot = Plot_Methods(path)
 l96 = Model_L96(N, F, dt, delta, d, plot)
@@ -68,11 +69,27 @@ Xt = Xt_2year[:, step_t:step_2year]
 logger.info('Prosess 3')
 Y = np.zeros((N, step_t))
 np.random.seed(0)
+noise = np.random.normal(loc=mu, scale=sigma, size=N)
 for i in range(step_t):
-    Y[:, i] = Xt[:, i] + np.random.normal(loc=mu, scale=sigma, size=N)
+    Y[:, i] = Xt[:, i] + noise
 
 # 4. EnKF
 logger.info('Prosess 4')
-Xa = l96.EnKF_PO(Y, m)
+Xa, Pa = l96.EnKF_PO(Y, m, noise)
+
+# 5. X1asFuncOfTime
+logger.info('Prosess 5')
+plot.X1asFuncOfTime(t_2year, Xt, Y, Xa)
+
+# 6. RMSE, Trace
+logger.info('Prosess 6')
+np.set_printoptions(threshold=np.inf)
+Xa_RMSE = l96.RMSE(Xa, Xt, step_t)
+Pa_trace = l96.Spread(Pa, step_t)
+
+#6. AnalysisRMSEandTrace
+plot.AnalysisRMSEandTrace(t_2year[:], Xa_RMSE, Pa_trace)
+plot.AnalysisErrCovariance(Pa)
+
 
 logger.info('Prosess Finish!!')

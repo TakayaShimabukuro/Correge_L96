@@ -179,7 +179,7 @@ class Plot_Methods:
                 plt.savefig(self.path + "AnalysisErrCovariance/AnalysisErrCovariance-delta-" + str(d[i])+"-day-"+str(day[k])+ ".png")
                 plt.close()
     
-    def TimeMeanRMSE(self, B_step, Xas_RMSE):
+    def TimeMeanRMSE(self, B_step, Xas_RMSE, name):
         self.make_file(self.path+"/TimeMeanRMSE")
         x_step=[0.1]
         x_start=[0.00]
@@ -199,7 +199,7 @@ class Plot_Methods:
         plt.xlabel(x_label)
         plt.ylabel(y_label)
         plt.title(title)
-        plt.savefig(self.path + "TimeMeanRMSE/TimeMeanRMSE.png")
+        plt.savefig(self.path + "TimeMeanRMSE/TimeMeanRMSE_spinup"+name+".png")
         plt.close()
     
     def TimeMeanRMSECase(self, B_step, Xas_RMSE, Xas_RMSE_case1, Xas_RMSE_case2):

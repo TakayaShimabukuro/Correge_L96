@@ -59,72 +59,101 @@ class Model_L96:
 
         return M
     
+    # RMSEを取得
+    def RMSE(self, X1, X2, step):
+        rmse = np.zeros((step))
+        for i in range(step):
+            sub = X1[1:, i] - X2[1:, i]
+            rmse[i] = np.sqrt(np.mean(sub**2))
+        return rmse
+    
+    # Spreadを取得
+    def Spread(self, P, step):
+        tmp = []
+        for t in range(step):
+            tmp.append(np.sqrt(np.trace(P[:, :, t])/len(P[:, :, t])))
+        return tmp
+    
     # PO法によるEnKF
-    def EnKF_PO(self, Y, m):
+    def EnKF_PO(self, Y, m, noise):
         # init setting
         step = len(Y[0])
         m_len = len(m)
+        Xa = np.zeros((self.N, step))
+        Pa = np.zeros((self.N, self.N, step))
         H = np.identity(self.N)
         R = np.identity(self.N)
         I = np.identity(self.N)
-        M = np.zeros((self.N, self.N))
+
 
         # m個格納用
         Xbs = []
         Xas = []
         Pbs = []
         Pas = []
-        dXbs = []
-        Zbs = []
 
-        # 1次元として用いるが、転置ができなくなるため2次元で宣言
-        Xb_sum = np.zeros((self.N, self.N))
-        Xb_mean = np.zeros((self.N, self.N))
-        
         # 1-0 準備 OK
         for i in range(m_len):
             Xbs.append(np.zeros((self.N, step)))
-            Xas.append(np.zeros((self.N, step)))
             Pbs.append(np.zeros(((self.N, self.N, step))))
+            Xas.append(np.zeros((self.N, step)))
             Pas.append(np.zeros(((self.N, self.N, step))))
-
-        # 1-1 Analysis Ensemble OK
-        for i in range(m_len):
-            Xbs[i][:, 0] = Y[:, m[i]]
-            Pbs[i][:, :, 0] = np.diag([m[i]]*self.N)
-            Xas[i][:, 0] = Y[:, m[i]]
-            Pas[i][:, :, 0] = np.diag([m[i]]*self.N)
         
-        # 1-2 Ensemble Forecasts OK
+        for i in range(m_len):
+            Xbs[i][:, 0] = Y[:, m[i]]+noise+10
+            Pbs[i][:, :, 0] = np.diag([m[i]]*self.N)
+            Xas[i][:, 0] = Y[:, m[i]]+noise+10
+            Pas[i][:, :, 0] = np.diag([m[i]]*self.N)
+    
         for t in range(1, step):
+            Xb_sum = np.zeros((self.N, self.N))
+            Xa_sum = np.zeros((self.N, self.N))
+    
             for i in range(m_len):
+                # 1 Ensemble Prediction (state)
                 Xbs[i][:, t] = self.RK4(Xas[i][:, t-1])
                 Xb_sum[:, 0] = Xb_sum[:, 0] + Xbs[i][:, t]
+
+            for i in range(m_len):
+                dXb = np.zeros((self.N, self.N))
+                Zb = np.zeros((self.N, self.N))
+                Yb = np.zeros((self.N, self.N))
+
+                dXb[:, 0] = Xbs[i][:, t] - (Xb_sum[:, 0] / m_len)
+
+                Zb[:, 0] = dXb[:, 0]/np.sqrt(m_len-1)
+                Yb = H@Zb
+
+                # 2 Prediction of Error Covariance (implicitly)
+                Pbs[i][:, :, t] = Zb@Zb.T
+
+                # 3 Kalman Gain
+                K = Zb@np.linalg.inv(I+Yb.T@np.linalg.inv(R)@Yb)@Yb.T@np.linalg.inv(R)
+
+                # 4 Analysis (state)
+                Xas[i][:, t] = Xbs[i][:, t] + K@(Y[:,t] + noise - H@Xbs[i][:, t])
+                Xa_sum[:, 0] = Xa_sum[:, 0] + Xas[i][:, t]
+            
+            Xa[:, t] = Xa_sum[:, 0] / m_len
+            for i in range(m_len):
                 
-            # 1-3 Ensemble Mean OK
-            Xb_mean[:, 0] = Xb_sum[:, 0] / m_len
-        
-            # 1-4 Ensemble Perturbation, m個のdelta Xbを保持 OK
-            for i in range(m_len):
-                tmp_delta = np.zeros((self.N, self.N))
-                tmp_delta[:, 0] = Xbs[i][:, t] - Xb_mean[:, 0]
-                dXbs.append(tmp_delta)
             
-
-            # 2 Prediction of Error Covariance (implicitly) 
+            # Pa
+            Pa_sum = np.zeros((self.N, self.N))
             for i in range(m_len):
-                tmp_Zb = np.zeros((self.N, self.N))
-                tmp_Zb = dXbs[i]/np.sqrt(m_len-1)
-                Pbs[i][:, :, t] = tmp_Zb@tmp_Zb.T
+                dXa = np.zeros((self.N, self.N))
+                Za = np.zeros((self.N, self.N))
+                
+                dXa[:, 0] = Xas[i][:, t] - (Xa_sum[:, 0] / m_len)
+                Za = dXa/np.sqrt(m_len-1)
 
+                Pas[i][:, :, t] = Za@Za.T
+                Pa_sum = Pa_sum + Za@Za.T
+
+            Pa[:, :, t] = Pa_sum / m_len
+        return Xa, Pa
             
-            logger.debug('Zbs[0][0, 0]={}'.format(Zbs[0][0:3, 0:3]))
-            logger.debug('Zbs[1][0, 0]={}'.format(Zbs[1][0:3, 0:3]))
-            self.plot.Debug(Zbs[0], "Zbs[0]")
-            self.plot.Debug(Zbs[1], "Zbs[1]")
-
-
-        # 2. Prediction of Error Covariance (implicitly)
-        # 3. Kalman Gain
-        # 4. Analysis (state)
-        # 5. Analysis Error Covariance
+            #logger.debug('Ybs[0][0, 0]={}'.format(Ybs[0][0:3, 0:3]))
+            #logger.debug('Ybs[1][0, 0]={}'.format(Ybs[1][0:3, 0:3]))
+            #self.plot.Debug(Ybs[0], "Ybs[0]")
+            #self.plot.Debug(Ybs[1], "Ybs[1]")

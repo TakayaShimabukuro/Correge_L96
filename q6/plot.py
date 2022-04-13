@@ -67,59 +67,55 @@ class Plot_Methods:
                 plt.close()
     
 
-    def X1asFuncOfTime(self, d, t, Xt, Y, Xfs, Xas):
-        x_step=[1, 10, 10]
-        x_start=[0, 0, 250]
-        x_end=[6, 51, 301]
+    def X1asFuncOfTime(self, t, Xt, Y, Xa):
+        x_step=[10]
+        x_start=[0]
+        x_end=[100]
         x_label = "time(day)"
         y_label = "X"
-        line_labels = ["Truth", "Observe", "Forcast", "Analysis"]
-        title = "Lecture4-EKF"
-        self.make_file(self.path+"/X1asFuncOfTime")
+        line_labels = ["Truth", "Observe", "Analysis"]
+        title = "Lecture6-EnKF-PO"
+        self.make_file(self.path+"/EnKF-PO")
 
-        for i in range(len(d)):
-            for j in range(len(x_step)):
-                plt.figure()
-                plt.xticks(np.arange(x_start[j], x_end[j], step=x_step[j]))
-                plt.plot(t[x_start[j]*4:x_end[j]*4+x_step[j]], Xt[1, x_start[j]*4:x_end[j]*4+x_step[j]], label=line_labels[0])
-                plt.plot(t[x_start[j]*4:x_end[j]*4+x_step[j]], Y[1, x_start[j]*4:x_end[j]*4+x_step[j]], label=line_labels[1])
-                plt.plot(t[x_start[j]*4:x_end[j]*4+x_step[j]], Xfs[i][1, x_start[j]*4:x_end[j]*4+x_step[j]], label=line_labels[2])
-                plt.plot(t[x_start[j]*4:x_end[j]*4+x_step[j]], Xas[i][1, x_start[j]*4:x_end[j]*4+x_step[j]], label=line_labels[3])
-                plt.legend()
-                plt.grid(color='k', linestyle='dotted', linewidth=0.5)
-                plt.xlim(x_start[j],x_end[j]-1)
-                plt.xlabel(x_label)
-                plt.ylabel(y_label)
-                plt.title(title)
-                plt.savefig(self.path + "X1asFuncOfTime/X1asFuncOfTime-delta-" + str(d[i])+ "-day-" + str(x_start[j]) +"-" + str(x_end[j]-1) + ".png")
-                plt.close()
-    
-
-    def AnalysisRMSE(self, d, t, Xas_RMSE):
-        x_step=[60, 10, 10, 1]
-        x_start=[0, 0, 250, 0]
-        x_end=[301, 51, 301, 6]
-        x_label = "time(day)"
-        y_label = "RMSE"
-        line_labels = ["delt="+str(d[0]), "delta="+str(d[1]), "delta="+str(d[2]), "delta="+str(d[3]), "delta="+str(d[4])]
-        title = "Lecture4-EKF"
-        self.make_file(self.path+"/AnalysisRMSE")
 
         for j in range(len(x_step)):
             plt.figure()
             plt.xticks(np.arange(x_start[j], x_end[j], step=x_step[j]))
-            plt.plot(t[x_start[j]*4:x_end[j]*4+x_step[j]], Xas_RMSE[0][x_start[j]*4:x_end[j]*4+x_step[j]], label=line_labels[0])
-            plt.plot(t[x_start[j]*4:x_end[j]*4+x_step[j]], Xas_RMSE[1][x_start[j]*4:x_end[j]*4+x_step[j]], label=line_labels[1])
-            plt.plot(t[x_start[j]*4:x_end[j]*4+x_step[j]], Xas_RMSE[2][x_start[j]*4:x_end[j]*4+x_step[j]], label=line_labels[2])
-            plt.plot(t[x_start[j]*4:x_end[j]*4+x_step[j]], Xas_RMSE[3][x_start[j]*4:x_end[j]*4+x_step[j]], label=line_labels[3])
-            plt.plot(t[x_start[j]*4:x_end[j]*4+x_step[j]], Xas_RMSE[3][x_start[j]*4:x_end[j]*4+x_step[j]], label=line_labels[4])
+            plt.plot(t[x_start[j]*4:x_end[j]*4+x_step[j]], Xt[1, x_start[j]*4:x_end[j]*4+x_step[j]], label=line_labels[0])
+            plt.plot(t[x_start[j]*4:x_end[j]*4+x_step[j]], Y[1, x_start[j]*4:x_end[j]*4+x_step[j]], label=line_labels[1])
+            plt.plot(t[x_start[j]*4:x_end[j]*4+x_step[j]], Xa[1, x_start[j]*4:x_end[j]*4+x_step[j]], label=line_labels[2])
             plt.legend()
             plt.grid(color='k', linestyle='dotted', linewidth=0.5)
             plt.xlim(x_start[j],x_end[j]-1)
             plt.xlabel(x_label)
             plt.ylabel(y_label)
             plt.title(title)
-            plt.savefig(self.path + "AnalysisRMSE/AnalysisRMSE-day-" + str(x_start[j]) +"-" + str(x_end[j]-1) + ".png")
+            plt.savefig(self.path + "EnKF-PO/EnKF-PO-" + str(x_start[j]) +"-" + str(x_end[j]-1) + ".png")
+            plt.close()
+    
+    
+
+    def AnalysisRMSEandTrace(self, t, RMSE, Trace):
+        x_step=[50]
+        x_start=[0] # day
+        x_end=[364] # day
+        x_label = "time(day)"
+        y_label = "RMSE"
+        title = "Lecture6-EKF"
+        self.make_file(self.path+"/AnalysisRMSEandTrace")
+
+        for j in range(len(x_step)):
+            plt.figure()
+            plt.xticks(np.arange(x_start[j], x_end[j], step=x_step[j]))
+            plt.plot(t[x_start[j]*4:x_end[j]*4], RMSE[x_start[j]*4:x_end[j]*4], label="Xa_RMSE")
+            plt.plot(t[x_start[j]*4:x_end[j]*4], Trace[x_start[j]*4:x_end[j]*4], label="Xa_Trace")
+            plt.legend()
+            plt.grid(color='k', linestyle='dotted', linewidth=0.5)
+            plt.xlim(x_start[j],x_end[j]-1)
+            plt.xlabel(x_label)
+            plt.ylabel(y_label)
+            plt.title(title)
+            plt.savefig(self.path + "AnalysisRMSEandTrace/AnalysisRMSEandTrace-" + str(x_start[j]) +"-" + str(x_end[j]-1) + ".png")
             plt.close()
 
     
@@ -147,7 +143,7 @@ class Plot_Methods:
         plt.close()
     
 
-    def AnalysisErrCovariance(self, d, Pas):
+    def AnalysisErrCovariance(self, Pa):
         x_step=[5]
         x_start=[0]
         x_end=[41]
@@ -161,22 +157,20 @@ class Plot_Methods:
         bounds = [-0.5, -0.3, -0.1, -0.05, -0.01, 0, 0.01, 0.05, 0.1, 0.3, 0.5]
         cmap = self.createCorlorMap("coolwarm", bounds)
         norm = BoundaryNorm(bounds,cmap.N)
-        for i in range(len(d)):
-            for k in range(len(day)):
-                fig = plt.figure()
-                plt.xticks(np.arange(x_start[j], x_end[j], step=x_step[j]))
-                #plt.contourf(Pas[i][:, :, day[k]*4], cmap='RdYlBu',  levels=11)
-                #plt.imshow(Pas[i][:, :, day[k]*4], cmap='RdYlBu', origin='upper', vmin=-0.5, vmax=0.5)
-                sc = plt.imshow(Pas[i][:, :, day[k]*4], cmap=cmap,norm=norm, vmin=min(bounds),vmax=max(bounds))
-                plt.legend()
-                plt.colorbar(sc,aspect=30,shrink=0.7)
-                plt.grid(color='k', linestyle='dotted', linewidth=0.5)
-                plt.xlim(x_start[j],x_end[j]-1)
-                plt.xlabel(x_label)
-                plt.ylabel(y_label)
-                plt.title(title)
-                plt.savefig(self.path + "AnalysisErrCovariance/AnalysisErrCovariance-delta-" + str(d[i])+"-day-"+str(day[k])+ ".png")
-                plt.close()
+
+        for k in range(len(day)):
+            fig = plt.figure()
+            plt.xticks(np.arange(x_start[j], x_end[j], step=x_step[j]))
+            sc = plt.imshow(Pa[:, :, day[k]*4], cmap=cmap,norm=norm, vmin=min(bounds),vmax=max(bounds))
+            plt.legend()
+            plt.colorbar(sc,aspect=30,shrink=0.7)
+            plt.grid(color='k', linestyle='dotted', linewidth=0.5)
+            plt.xlim(x_start[j],x_end[j]-1)
+            plt.xlabel(x_label)
+            plt.ylabel(y_label)
+            plt.title(title)
+            plt.savefig(self.path + "AnalysisErrCovariance/AnalysisErrCovariance-delta-day-"+str(day[k])+ ".png")
+            plt.close()
     
     def TimeMeanRMSE(self, B_step, Xas_RMSE):
         self.make_file(self.path+"/TimeMeanRMSE")
