@@ -84,76 +84,60 @@ class Model_L96:
 
     # PO法によるEnKF
     def EnKF_PO(self, Y, m, noise, step):
-        # init setting
         m_len = len(m)
         Xa = np.zeros(((self.N, self.N, step)))
         Pa = np.zeros(((self.N, self.N, step)))
-        H = np.identity(self.N)
-        R = np.identity(self.N)
-        I = np.identity(self.N)
-
-        # m個格納用
         Xbs = []
         Xas = []
 
-        # 1-0 準備 OK
         for i in range(m_len):
             Xbs.append(np.zeros(((self.N, self.N, step))))
             Xas.append(np.zeros(((self.N, self.N, step))))
-
-        for i in range(m_len):
             Xbs[i][:, 0, 0] = Y[:, 0, m[i]]+noise
             Xas[i][:, 0, 0] = Y[:, 0, m[i]]+noise
 
-        logger.info("------------------------------------------------")
-        logger.debug('Xbs[0][0:5, 0:5, 0]\n{}'.format(Xbs[0][0:5, 0:5, 0]))
-        logger.debug('Xas[0][0:5, 0:5, 0]\n{}'.format(Xas[0][0:5, 0:5, 0]))
-        logger.debug('Y[0:5, 0:5, 0]\n{}'.format(Y[0:5, 0:5, 0]))
-
         for t in range(1, step):
+            # init setting
+            H = np.identity(self.N)
+            R = np.identity(self.N)
+            I = np.identity(self.N)
+            K = np.zeros((self.N, self.N))
             Xb_sum = np.zeros((self.N, self.N))
             Xa_sum = np.zeros((self.N, self.N))
+            dXb = np.zeros((self.N, self.N))
+            Zb = np.zeros((self.N, self.N))
+            Yb = np.zeros((self.N, self.N))
+            
 
             for i in range(m_len):
                 # 1 Ensemble Prediction (state)
                 Xbs[i][:, 0, t] = self.RK4(Xas[i][:, 0, t-1])
                 Xb_sum[:, 0] = np.add(Xb_sum[:, 0], Xbs[i][:, 0, t])
             
-            dXb = np.zeros((self.N, self.N))
-            Zb = np.zeros((self.N, self.N))
-            Yb = np.zeros((self.N, self.N))
-
             for i in range(m_len):
-                
-                dXb[:, 0] = np.subtract(Xbs[i][:, 0, t], (Xb_sum[:, 0] / m_len))
-                Zb[:, 0]  = dXb[:, 0] / np.sqrt(m_len-1)
+                dXb[:, 0] = Xbs[i][:, 0, t]-(Xb_sum[:, 0] / m_len)
+                Zb[:, 0]  = (dXb[:, 0] / np.sqrt(m_len-1))
                 Yb = H@Zb
 
-                # 2 Prediction of Error Covariance (implicitly)
-
                 # 3 Kalman Gain
-                tmp_1 = np.add(I, Yb.T@np.linalg.inv(R)@Yb)
-                K = Zb@np.linalg.inv(tmp_1)@Yb.T@np.linalg.inv(R)
+                K[:, :] = Zb@Yb.T@np.linalg.inv((Yb@Yb.T)+R)
 
                 # 4 Analysis (state)
-                tmp_noise = np.random.normal(loc=0, scale=1, size=(self.N, self.N))
-                tmp_1 = K@np.subtract(np.add(Y[:, 0, t], tmp_noise[:, 0]), H@Xbs[i][:, 0, t])
-
-                Xas[i][:, 0, t] = np.add(Xbs[i][:, 0, t], tmp_1)
+                Xas[i][:, 0, t] = Xbs[i][:, 0, t] + K@(Y[:, 0, t]+noise-H@Xbs[i][:, 0, t])
                 Xa_sum[:, 0] = Xa_sum[:, 0] + Xas[i][:, 0, t]
+
+                if(i < 1):
+                    logger.info("------------------------------------------------")
+                    logger.debug('dXb[0:5, 0:5]\n{}'.format(dXb[0:5, 0:5]))
+                    logger.debug('Zb[0:5, 0:5]\n{}'.format(Zb[0:5, 0:5]))
+                    logger.debug('Yb[0:5, 0:5]\n{}'.format(Yb[0:5, 0:5]))
+                    logger.debug('K[0:3, 0:3]\n{}'.format(K[0:3, 0:3]))
+                    logger.debug('Xbs[0][0:5, 0:5, t]\n{}'.format(Xbs[i][0:5, 0:5, t]))
+                    logger.debug('Xas[0][0:5, 0:5, t]\n{}'.format(Xas[i][0:5, 0:5, t]))
             
             Xa[:, 0, t] = Xa_sum[:, 0] / m_len
             
-            if(t < 2):
-                logger.info("------------------------------------------------")
-                logger.debug('Xas[i][0:5, 0:5, t]\n{}'.format(Xas[i][0:5, 0:5, t]))
-                logger.debug('Xa[0:5, 0:5, t]\n{}'.format(Xa[0:5, 0:5, t]))
-                logger.debug('Xa_sum[0:5, 0:5]\n{}'.format(Xa_sum[0:5, 0:5]))
-                logger.debug('dXb[0:5, 0:5]\n{}'.format(dXb[0:5, 0:5]))
-                logger.debug('Zb[0:5, 0:5]\n{}'.format(Zb[0:5, 0:5]))
-                logger.debug('Yb[0:5, 0:5]\n{}'.format(Yb[0:5, 0:5]))
-                logger.debug('K[0:3, 0:3]\n{}'.format(K[0:3, 0:3]))
-
+            
             # Pa
             Pa_sum = np.zeros((self.N, self.N))
             dXa = np.zeros((self.N, self.N))
@@ -172,10 +156,8 @@ class Model_L96:
                 logger.debug('Pa[0:5, 0:5, t]\n{}'.format(Pa[0:5, 0:5, t]))
                 logger.debug('dXa[:, 0]\n{}'.format(dXa[0:5, 0:5]))
                 logger.debug('Za[:, 0] \n{}'.format(Za[0:5, 0:5] ))
+                #self.plot.Debug(Ybs[0], "Ybs[0]")
+                #self.plot.Debug(Ybs[1], "Ybs[1]")
+            
             
         return Xa, Pa
-
-        #logger.debug('Ybs[0][0, 0]={}'.format(Ybs[0][0:3, 0:3]))
-        #logger.debug('Ybs[1][0, 0]={}'.format(Ybs[1][0:3, 0:3]))
-        #self.plot.Debug(Ybs[0], "Ybs[0]")
-        #self.plot.Debug(Ybs[1], "Ybs[1]")

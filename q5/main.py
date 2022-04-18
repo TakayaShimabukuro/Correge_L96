@@ -49,16 +49,20 @@ plot = Plot_Methods(path, path_debug)
 Xfs = []
 Pfs = []
 Xas = []
-Xas_case1 = []
-Xas_case2 = []
 Pas = []
 Xas_RMSE = []
 Pas_Spread = []
 Xa_RMSE_aves = []
 Xa_RMSE_aves_case1 = []
 Xa_RMSE_aves_case2 = []
-delate_queue1=np.arange(1, 40, 2)
-delate_queue2=np.arange(0, 20, 1)
+Xa_3DVAR_best1 = []
+Xa_3DVAR_best2 = []
+Xa_KF_best1 = []
+Xa_KF_best2 = []
+#delate_queue1 = np.arange(1, 40, 2)
+#delate_queue2 = np.arange(0, 20, 1)
+delate_queue1 = l96.get_deleate_queue(2)
+delate_queue2 = l96.get_deleate_queue(1)
 spinup = 400
 
 # 1. L96を2年分シミュレーションする
@@ -95,32 +99,48 @@ for i in range(len(B_step)):
     Xa_RMSE = l96.RMSE(Xas[i], Xt, step_t)
     Xa_RMSE_Tstep_mean = np.mean(Xa_RMSE[spinup:])
     Xa_RMSE_aves.append(Xa_RMSE_Tstep_mean)
-    logger.debug("B={%f}, ave RMSE(Xa)={%f}", B_step[i], Xa_RMSE_Tstep_mean)
+    #logger.debug("B={%f}, ave RMSE(Xa)={%f}", B_step[i], Xa_RMSE_Tstep_mean)
 
 #6. Time-mean RMSE
-plot.TimeMeanRMSE(B_step, Xa_RMSE_aves, str(spinup))
+#plot.TimeMeanRMSE(B_step, Xa_RMSE_aves, str(spinup))
 
-
+'''
 # 7.3DVAR-case
 logger.info('Prosess 7')
-for i in range(len(B_step)):
-    B = np.diag([B_step[i]]*N)
-    Xa_case1 = l96.analyze_3DVAR_case(Y, B, step_t, delate_queue1)
-    Xa_case2 = l96.analyze_3DVAR_case(Y, B, step_t, delate_queue2)
-    Xas_case1.append(Xa_case1)
-    Xas_case2.append(Xa_case2)
-
+for j in range(len(delate_queue1)):
+    for i in range(len(B_step)):
+        B = np.diag([B_step[i]]*N)
+        Xa_case1 = l96.analyze_3DVAR_case(Y, B, step_t, delate_queue1[j])
+        Xa_case2 = l96.analyze_3DVAR_case(Y, B, step_t, delate_queue2[j])
+        Xas_case1.append(Xa_case1)
+        Xas_case2.append(Xa_case2)
 
 # 8. get RMSE-case
 logger.info('Prosess 8')
-for i in range(len(B_step)):
-    Xa_RMSE_aves_case1.append(np.mean(l96.RMSE(Xas_case1[i], Xt, step_t)[400:]))
-    Xa_RMSE_aves_case2.append(np.mean(l96.RMSE(Xas_case2[i], Xt, step_t)[400:]))
+for j in range(len(delate_queue1)):
+    for i in range(len(B_step)):
+        Xa_RMSE_aves_case1.append(np.mean(l96.RMSE(Xas_case1[i], Xt, step_t)[400:]))
+        Xa_RMSE_aves_case2.append(np.mean(l96.RMSE(Xas_case2[i], Xt, step_t)[400:]))
 
 # 9. Time-mean RMSE
 logger.info('Prosess 9')
 plot.TimeMeanRMSECase(B_step, Xa_RMSE_aves, Xa_RMSE_aves_case1, Xa_RMSE_aves_case2)
+'''
+# 10.ComparisonOfEKFand3DVAR
+logger.info('Prosess 10')
+for i in range(len(delate_queue1)):
+    logger.debug( str(i+1) + "/" + str(len(delate_queue1)+1))
+    Xa_3DVAR_case1 = l96.analyze_3DVAR_case(Y, np.diag([0.225]*N), step_t, delate_queue1[i])
+    Xa_3DVAR_case2 = l96.analyze_3DVAR_case(Y, np.diag([0.225]*N), step_t, delate_queue2[i])
+    Xa_3DVAR_best1.append(np.mean(l96.RMSE(Xa_3DVAR_case1, Xt, step_t)[400:]))
+    Xa_3DVAR_best2.append(np.mean(l96.RMSE(Xa_3DVAR_case2, Xt, step_t)[400:]))
 
+    Xa_KF_case1 = l96.KF(Y, 0.15, delate_queue1[i])
+    Xa_KF_case2 = l96.KF(Y, 0.15, delate_queue2[i])
+    Xa_KF_best1.append(np.mean(l96.RMSE(Xa_KF_case1, Xt, step_t)[400:]))
+    Xa_KF_best2.append(np.mean(l96.RMSE(Xa_KF_case2, Xt, step_t)[400:]))
 
+plot.ComparisonOfEKFand3DVAR(Xa_3DVAR_best1, Xa_KF_best1, "case1")
+plot.ComparisonOfEKFand3DVAR(Xa_3DVAR_best2, Xa_KF_best2, "case2")
 
 logger.info('Prosess Finish!!')

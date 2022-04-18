@@ -31,23 +31,24 @@ class Model_L96:
         return X1 + (k1 + 2.0*k2 + 2.0*k3 + k4) /6.0
 
     # カルマンフィルタ
-    def KF(self, Y, d):
+    def KF(self, Y_all, d, delate_queue):
         
         # init setting
-        step = len(Y[0])
+        step = len(Y_all[0])
         Xf = np.zeros((self.N, step))
         Pf = np.zeros(((self.N, self.N, step)))
         Xa = np.zeros((self.N, step))
         Pa = np.zeros(((self.N, self.N, step)))
-        H = np.identity(self.N)
-        R = np.identity(self.N)
+        H = np.delete(np.identity(self.N), delate_queue, axis=0)
+        R = np.identity(H.shape[0])
         I = np.identity(self.N)
+        Y = np.delete(Y_all, delate_queue, axis=0)
         M = np.zeros((self.N, self.N))
 
         # progress 1
-        Xf[:, 0] = Y[:, 100]
+        Xf[:, 0] = Y_all[:, 100]
         Pf[:, :, 0] = np.diag([25]*self.N)
-        Xa[:, 0] = Y[:, 100]
+        Xa[:, 0] = Y_all[:, 100]
         Pa[:, :, 0] = np.diag([25]*self.N)
         
         for t in range(1, step):
@@ -55,14 +56,12 @@ class Model_L96:
             M = self.get_M(Xa[:, t-1])            
             Xf[:, t] = self.RK4(Xa[:, t-1])
             Pf[:, :, t] = (M@Pa[:, :, t-1]@M.T)*(1 + d)
-
             # progress 3
             K = (Pf[:, :, t]@H.T)@np.linalg.inv(H@Pf[:, :, t]@H.T + R)
-            Xa[:, t] = Xf[:, t] + K@(Y[:,t] - Xf[:, t])
+            Xa[:, t] = Xf[:, t] + K@(Y[:,t] - H@Xf[:, t])
             Pa[:, :, t] = (I-K@H)@Pf[:, :, t]
-
         # progress 4
-        return Xf, Pf, Xa, Pa
+        return Xa
     
     # 3DVAR
     def analyze_3DVAR(self, Y, B, step):
@@ -81,11 +80,10 @@ class Model_L96:
     
     # 3DVAR-case
     def analyze_3DVAR_case(self, Y_all, B, step, delate_queue):
-        n_size = len(delate_queue)
         Xb = np.zeros((self.N, step))
         Xa = np.zeros((self.N, step))
-        R = np.identity(n_size)
         H = np.delete(np.identity(self.N), delate_queue, axis=0)
+        R = np.identity(H.shape[0])
         Y = np.delete(Y_all, delate_queue, axis=0)
         '''
         logger.debug(n_size)
@@ -102,6 +100,7 @@ class Model_L96:
             Xb[:, t] = self.RK4(Xa[:, t-1])
             K = (B@H.T)@np.linalg.inv(H@B@H.T + R)
             Xa[:, t] = Xb[:, t] + K@(Y[:,t] - H@Xb[:, t])
+            
 
         return Xa
 
@@ -155,3 +154,19 @@ class Model_L96:
         data = np.delete(data_all, delate_queue, axis=0)
         data = np.delete(data, delate_queue, axis=1)
         return data
+
+    def get_deleate_queue(self, delete_step):
+        deleate_queue = []
+        if delete_step == 1:
+            que = np.arange(0, 25, 5)
+            for i, data in enumerate(que):
+                deleate_queue.append(np.arange(0, data, delete_step))
+        
+        if delete_step >=2:
+            que = np.arange(15, 40, 5)
+            for i, data in enumerate(que):
+                sub_range = 5*i*delete_step
+                deleate_queue.append(np.arange(0, sub_range, delete_step))
+        
+        logger.debug(deleate_queue)
+        return deleate_queue

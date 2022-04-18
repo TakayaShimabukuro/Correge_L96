@@ -234,3 +234,21 @@ class Plot_Methods:
         plt.title(title)
         plt.savefig(self.path_debug + name + ".png")
         plt.close()
+    
+    def ComparisonOfEKFand3DVAR(self, data_3DVAR, data_KF, name):
+        self.make_file(self.path+"/ComparisonOfEKFand3DVAR")
+        data_range = np.arange(40, 15, -5)
+        x_label = "B"
+        y_label = "ave RMSE(Time mean)"
+        title = "Lecture5-3DVAR"
+        j = 0
+        plt.figure()
+        plt.plot(data_range, data_KF, marker="o",fillstyle='none', color="b", linestyle="dashed", lw=0.8, label="KF")
+        plt.plot(data_range, data_3DVAR, marker="o",fillstyle='none', color="r", linestyle="dashed", lw=0.8, label="3DVAR")
+        plt.grid(color='k', linestyle='dotted', linewidth=0.5)
+        plt.legend()
+        plt.xlabel(x_label)
+        plt.ylabel(y_label)
+        plt.title(title)
+        plt.savefig(self.path + "ComparisonOfEKFand3DVAR/ComparisonOfEKFand3DVAR-" + str(name)+".png")
+        plt.close()
