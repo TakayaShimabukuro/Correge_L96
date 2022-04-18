@@ -40,7 +40,7 @@ step_t = 1460 # 4step 1day
 #d = np.arange(0, 0.20, 0.025)
 d = [0.00]
 B = np.arange(0.05, 0.625, 0.025)
-m = np.arange(20, 120, 1)
+m = np.arange(20, 520, 1)
 logger.info('-----member : {}------'.format(str(len(m))))
 path = "./q6/result/"
 plot = Plot_Methods(path)
@@ -73,26 +73,17 @@ noise = np.random.normal(loc=mu, scale=sigma, size=N)
 for i in range(step_t):
     Y[:, i] = Xt[:, i] + noise
 
-# 3-2. 配列をreshape、一次元から二次元へ
-Xt = l96.Reshape(Xt, step_t)
-Y = l96.Reshape(Y, step_t)
-
 # 4. EnKF
 logger.info('Prosess 4')
-Xa, Pa = l96.EnKF_PO(Y, m, noise, step_t)
+Xa, Xa_mean = l96.EnKF_PO(Y, m, noise, step_t)
 
 # 5. FuncObTime
 logger.info('Prosess 5')
-plot.FuncObTime(t_2year, Xt, Y, Xa)
-
-# 6. RMSE, Trace
-logger.info('Prosess 6')
-Xa_RMSE = l96.RMSE(Xa, Xt, step_t)
-Pa_trace = l96.Spread(Pa, step_t)
-
-#6. AnalysisRMSEandTrace
-plot.AnalysisRMSEandTrace(t_2year[:], Xa_RMSE, Pa_trace)
-plot.AnalysisErrCovariance(Pa)
+plot.FuncObTime(t_2year, Xt, Y, Xa_mean, "Xa_mean")
+plot.FuncObTime(t_2year, Xt, Y, Xa[:, :, 0], "Xa0")
+plot.FuncObTime(t_2year, Xt, Y, Xa[:, :, 1], "Xa1")
+plot.FuncObTime(t_2year, Xt, Y, Xa[:, :, 2], "Xa2")
+plot.FuncObTime(t_2year, Xt, Y, Xa[:, :, 3], "Xa3")
 
 
 logger.info('Prosess Finish!!')

@@ -67,7 +67,7 @@ class Plot_Methods:
                 plt.close()
     
 
-    def FuncObTime(self, t, Xt, Y, Xa):
+    def FuncObTime(self, t, Xt, Y, Xa, name):
         x_step=[10]
         x_start=[0]
         x_end=[100]
@@ -81,16 +81,16 @@ class Plot_Methods:
         for j in range(len(x_step)):
             plt.figure()
             plt.xticks(np.arange(x_start[j], x_end[j], step=x_step[j]))
-            plt.plot(t[x_start[j]*4:x_end[j]*4], Xt[1, 0, x_start[j]*4:x_end[j]*4], label=line_labels[0])
-            plt.plot(t[x_start[j]*4:x_end[j]*4], Y[1, 0, x_start[j]*4:x_end[j]*4], label=line_labels[1])
-            plt.plot(t[x_start[j]*4:x_end[j]*4], Xa[1, 0, x_start[j]*4:x_end[j]*4], label=line_labels[2])
+            plt.plot(t[x_start[j]*4:x_end[j]*4], Xt[1, x_start[j]*4:x_end[j]*4], label=line_labels[0])
+            plt.plot(t[x_start[j]*4:x_end[j]*4], Y[1, x_start[j]*4:x_end[j]*4], label=line_labels[1])
+            plt.plot(t[x_start[j]*4:x_end[j]*4], Xa[1, x_start[j]*4:x_end[j]*4], label=line_labels[2])
             plt.legend()
             plt.grid(color='k', linestyle='dotted', linewidth=0.5)
             plt.xlim(x_start[j],x_end[j]-1)
             plt.xlabel(x_label)
             plt.ylabel(y_label)
             plt.title(title)
-            plt.savefig(self.path + "EnKF-PO/EnKF-PO-" + str(x_start[j]) +"-" + str(x_end[j]-1) + ".png")
+            plt.savefig(self.path + "EnKF-PO/EnKF-PO-" + name + ".png")
             plt.close()
 
     def AnalysisRMSEandTrace(self, t, RMSE, Trace):
