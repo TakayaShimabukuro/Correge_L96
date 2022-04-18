@@ -106,7 +106,7 @@ class Plot_Methods:
             plt.figure()
             plt.xticks(np.arange(x_start[j], x_end[j], step=x_step[j]))
             plt.plot(t[x_start[j]*4:x_end[j]*4], RMSE[x_start[j]*4:x_end[j]*4], label="Xa_RMSE")
-            plt.plot(t[x_start[j]*4:x_end[j]*4], Trace[x_start[j]*4:x_end[j]*4], label="Xa_Trace")
+            plt.plot(t[x_start[j]*4:x_end[j]*4], Trace[x_start[j]*4:x_end[j]*4], label="Pa_Trace")
             plt.legend()
             plt.grid(color='k', linestyle='dotted', linewidth=0.5)
             plt.xlim(x_start[j],x_end[j]-1)

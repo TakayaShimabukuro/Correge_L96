@@ -64,7 +64,7 @@ class Model_L96:
     def RMSE(self, X1, X2, step):
         rmse = np.zeros((step))
         for t in range(step):
-            sub = X1[:, 0, t] - X2[:, 0, t]
+            sub = X1[:, t] - X2[:, t]
             rmse[t] = np.sqrt(np.mean(sub**2))
         return rmse
 
@@ -88,15 +88,17 @@ class Model_L96:
         Xb = np.zeros(((self.N, step, m_len)))
         Xa = np.zeros(((self.N, step, m_len)))
         Xa_mean = np.zeros((self.N, step))
-        Pa = np.zeros((self.N, self.N, step))
+        Pa = np.zeros(((self.N, self.N, step)))
         H = np.identity(self.N)
         R = np.identity(self.N)
         I = np.identity(m_len)
 
+        # t = 0
         for m in range(m_len):
-            Xb[:, 0, m] = Y[:, 100 + (m*2)]
-            Xa[:, 0, m] = Y[:, 100 + (m*2)]
-
+            Xb[:, 0, m] = Y[:, 100 + (m*2)]+noise
+            Xa[:, 0, m] = Y[:, 100 + (m*2)]+noise
+        
+        # t > 0
         for t in range(1, step):
             Xb_sum = np.zeros(self.N)
             Xa_sum = np.zeros(self.N)
@@ -110,9 +112,10 @@ class Model_L96:
             Xb_mean = Xb_sum / m_len
             
             for m in range(m_len):
-                dXb[:, m] = Xb[:, t, m]-Xb_mean
+                dXb[:, m] = (Xb[:, t, m]-Xb_mean)
             
             Zb = dXb / np.sqrt(m_len-1)
+            Zb = Zb * 1.2
             Yb = H@Zb
             K = Zb @ (np.linalg.inv(I + Yb.T@np.linalg.inv(R)@ Yb)) @ Yb.T @ np.linalg.inv(R)
             

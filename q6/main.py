@@ -40,7 +40,7 @@ step_t = 1460 # 4step 1day
 #d = np.arange(0, 0.20, 0.025)
 d = [0.00]
 B = np.arange(0.05, 0.625, 0.025)
-m = np.arange(20, 420, 2)
+m = np.arange(20, 320, 1)
 logger.info('-----member : {}------'.format(str(len(m))))
 path = "./q6/result/"
 plot = Plot_Methods(path)
@@ -84,6 +84,15 @@ plot.FuncObTime(t_2year, Xt, Y, Xa[:, :, 0], "Xa0")
 plot.FuncObTime(t_2year, Xt, Y, Xa[:, :, 1], "Xa1")
 plot.FuncObTime(t_2year, Xt, Y, Xa[:, :, 2], "Xa2")
 plot.FuncObTime(t_2year, Xt, Y, Xa[:, :, 3], "Xa3")
+
+# 6. RMSE, Trace
+logger.info('Prosess 6')
+Xa_RMSE = l96.RMSE(Xa_mean, Xt, step_t)
+Pa_trace = l96.Spread(Pa, step_t)
+
+#6. AnalysisRMSEandTrace
+plot.AnalysisRMSEandTrace(t_2year[:], Xa_RMSE, Pa_trace)
+plot.AnalysisErrCovariance(Pa)
 
 
 logger.info('Prosess Finish!!')
