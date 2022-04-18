@@ -75,7 +75,7 @@ for i in range(step_t):
 
 # 4. EnKF
 logger.info('Prosess 4')
-Xa, Xa_mean = l96.EnKF_PO(Y, m, noise, step_t)
+Xa, Xa_mean, Pa = l96.EnKF_PO(Y, m, noise, step_t)
 
 # 5. FuncObTime
 logger.info('Prosess 5')

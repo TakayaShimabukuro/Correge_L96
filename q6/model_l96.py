@@ -88,20 +88,21 @@ class Model_L96:
         Xb = np.zeros(((self.N, step, m_len)))
         Xa = np.zeros(((self.N, step, m_len)))
         Xa_mean = np.zeros((self.N, step))
-
+        Pa = np.zeros((self.N, self.N, step))
         H = np.identity(self.N)
         R = np.identity(self.N)
         I = np.identity(m_len)
 
-        # progress 1
         for m in range(m_len):
-            Xb[:, 0, m] = Y[:, 10 + (m*3)]
-            Xa[:, 0, m] = Y[:, 10 + (m*3)]
+            Xb[:, 0, m] = Y[:, 100 + (m*2)]
+            Xa[:, 0, m] = Y[:, 100 + (m*2)]
 
         for t in range(1, step):
             Xb_sum = np.zeros(self.N)
             Xa_sum = np.zeros(self.N)
+            Pa_sum = np.zeros((self.N, self.N))  
             dXb = np.zeros((self.N, m_len))
+            dXa = np.zeros((self.N, m_len))
 
             for m in range(m_len):
                 Xb[:, t, m] = self.RK4(Xa[:, t-1, m])
@@ -111,13 +112,22 @@ class Model_L96:
             for m in range(m_len):
                 dXb[:, m] = Xb[:, t, m]-Xb_mean
             
-            Zb = (dXb)*1.1 / np.sqrt(m_len-1)
+            Zb = dXb / np.sqrt(m_len-1)
             Yb = H@Zb
             K = Zb @ (np.linalg.inv(I + Yb.T@np.linalg.inv(R)@ Yb)) @ Yb.T @ np.linalg.inv(R)
             
             for m in range(m_len):                
-                Xa[:, t, m] = Xb[:, t, m] + K@(Y[:, t]-H@Xb[:, t, m])
+                Xa[:, t, m] = Xb[:, t, m] + K@(Y[:, t]+noise-H@Xb[:, t, m])
                 Xa_sum = Xa_sum + Xa[:, t, m]
             Xa_mean[:, t] = Xa_sum / m_len
 
-        return Xa, Xa_mean
+            for m in range(m_len):
+                dXa[:, m] = Xa[:, t, m] - Xa_mean[:, t]
+
+            for m in range(m_len):
+                Za = dXa/np.sqrt(m_len-1)
+                Pa_sum = Pa_sum + Za@Za.T
+
+            Pa[:, :, t] = Pa_sum / m_len
+
+        return Xa, Xa_mean, Pa
