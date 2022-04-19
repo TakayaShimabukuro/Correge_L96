@@ -95,8 +95,8 @@ class Model_L96:
 
         # t = 0
         for m in range(m_len):
-            Xb[:, 0, m] = Y[:, 100 + (m*2)]+noise
-            Xa[:, 0, m] = Y[:, 100 + (m*2)]+noise
+            Xb[:, 0, m] = Y[:, m]+noise
+            Xa[:, 0, m] = Y[:, m]+noise
         
         # t > 0
         for t in range(1, step):
@@ -108,19 +108,22 @@ class Model_L96:
 
             for m in range(m_len):
                 Xb[:, t, m] = self.RK4(Xa[:, t-1, m])
-                Xb_sum = Xb_sum + Xb[:, t, m]
+                Xb_sum += Xb[:, t, m]
             Xb_mean = Xb_sum / m_len
             
             for m in range(m_len):
-                dXb[:, m] = (Xb[:, t, m]-Xb_mean)
+                dXb[:, m] = Xb[:, t, m]-Xb_mean
             
+            dXb = dXb * (1 + self.d)
             Zb = dXb / np.sqrt(m_len-1)
-            Zb = Zb * 1.2
-            Yb = H@Zb
-            K = Zb @ (np.linalg.inv(I + Yb.T@np.linalg.inv(R)@ Yb)) @ Yb.T @ np.linalg.inv(R)
-            
+            Yb = H@Zb 
+
+            #Yb = H@Zb
+            K = (Zb @ (np.linalg.inv(I + Yb.T@np.linalg.inv(R)@ Yb)) @ Yb.T @ np.linalg.inv(R))
+            logger.debug("K.shape:{}".format(K.shape), )
+            logger.debug("K[0:5, 0:5]\n:{}".format(K[0:5, 0:5]))
             for m in range(m_len):                
-                Xa[:, t, m] = Xb[:, t, m] + K@(Y[:, t]+noise-H@Xb[:, t, m])
+                Xa[:, t, m] = Xb[:, t, m] + K@(Y[:, t]-H@Xb[:, t, m])
                 Xa_sum = Xa_sum + Xa[:, t, m]
             Xa_mean[:, t] = Xa_sum / m_len
 

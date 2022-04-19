@@ -58,6 +58,8 @@ class Model_L96:
             Pf[:, :, t] = (M@Pa[:, :, t-1]@M.T)*(1 + d)
             # progress 3
             K = (Pf[:, :, t]@H.T)@np.linalg.inv(H@Pf[:, :, t]@H.T + R)
+            logger.debug("K.shape:{}".format(K.shape), )
+            logger.debug("K[0:5, 0:5]\n:{}".format(K[0:5, 0:5]))
             Xa[:, t] = Xf[:, t] + K@(Y[:,t] - H@Xf[:, t])
             Pa[:, :, t] = (I-K@H)@Pf[:, :, t]
         # progress 4

@@ -34,7 +34,7 @@ dt = 0.05
 delta = 10**-5
 mu = 0.0
 sigma = 1.0
-
+np.set_printoptions(suppress=True)
 # local parameter
 logger.info('Prosess Start!!')
 step_2year = 2848

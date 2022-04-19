@@ -37,21 +37,14 @@ sigma = 1.0
 logger.info('Prosess Start!!')
 step_2year = 2920
 step_t = 1460 # 4step 1day 
-#d = np.arange(0, 0.20, 0.025)
-d = [0.00]
-B = np.arange(0.05, 0.625, 0.025)
-m = np.arange(20, 320, 1)
+d = 8.0
+m = np.arange(20, 620, 2)
 logger.info('-----member : {}------'.format(str(len(m))))
 path = "./q6/result/"
 plot = Plot_Methods(path)
 l96 = Model_L96(N, F, dt, delta, d, plot)
-Xfs = []
-Pfs = []
-Xas = []
-Pas = []
-Xas_RMSE = []
-Pas_Spread = []
-Xa_RMSE_aves = []
+
+np.set_printoptions(suppress=True)
 
 # 1. L96を2年分シミュレーションする
 logger.info('Prosess 1')
