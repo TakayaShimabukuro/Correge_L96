@@ -83,7 +83,7 @@ class Model_L96:
         return YO
 
     # PO法によるEnKF
-    def EnKF_PO(self, Y, m_temp, noise, step):
+    def EnKF_PO(self, Y, m_temp, step):
         m_len = len(m_temp)
         Xb = np.zeros(((self.N, step, m_len)))
         Xa = np.zeros(((self.N, step, m_len)))
@@ -93,10 +93,17 @@ class Model_L96:
         R = np.identity(self.N)
         I = np.identity(m_len)
 
+        #Xa_solo = np.zeros((self.N, step))
+        #Xb_solo = np.zeros((self.N, step))
+        #Xa_solo[:, 0] = Y[:, m_temp[0]]+noise
+        #Xb_solo[:, 0] = Y[:, m_temp[0]]+noise
+
         # t = 0
         for m in range(m_len):
-            Xb[:, 0, m] = Y[:, m]+noise
-            Xa[:, 0, m] = Y[:, m]+noise
+            Xb[:, 0, m] = Y[:, m_temp[m]]+(np.random.normal(loc=0.0, scale=1.0, size=self.N)*5)
+            Xa[:, 0, m] = Y[:, m_temp[m]]+(np.random.normal(loc=0.0, scale=1.0, size=self.N)*5)
+            logger.debug(" Xb[:, 0, m]\n:{}".format(Xb[:, 0, m]))
+        Pa[:, :, 0] = np.diag([25]*self.N)
         
         # t > 0
         for t in range(1, step):
@@ -109,30 +116,42 @@ class Model_L96:
             for m in range(m_len):
                 Xb[:, t, m] = self.RK4(Xa[:, t-1, m])
                 Xb_sum += Xb[:, t, m]
+            
             Xb_mean = Xb_sum / m_len
             
             for m in range(m_len):
                 dXb[:, m] = Xb[:, t, m]-Xb_mean
-            
-            dXb = dXb * (1 + self.d)
             Zb = dXb / np.sqrt(m_len-1)
-            Yb = H@Zb 
+            Yb = H@Zb
 
-            #Yb = H@Zb
+            #M = self.get_M(Xa_solo[:, t-1, 0])
+            #Xb_solo[:, t] = self.RK4(Xa_solo[:, t-1])
+            #logger.debug("Xb_solo\n:{}".format(Xb_solo[0:5, 0:5]))
+            #logger.debug("Xb\n:{}".format(Xb[0:5, 0:5, 0]))
+            #Pb = Zb@Zb.T*(1 + self.d) 
+            #Pf = (M@Pa[:, :, t-1]@M.T)*(1 + self.d)
+            #logger.debug("Pb\n:{}".format(Pb[0:5, 0:5]))
+            #logger.debug("Pf\n:{}".format(Pf[0:5, 0:5]))
+            
+
             K = (Zb @ (np.linalg.inv(I + Yb.T@np.linalg.inv(R)@ Yb)) @ Yb.T @ np.linalg.inv(R))
-            logger.debug("K.shape:{}".format(K.shape), )
-            logger.debug("K[0:5, 0:5]\n:{}".format(K[0:5, 0:5]))
-            for m in range(m_len):                
-                Xa[:, t, m] = Xb[:, t, m] + K@(Y[:, t]-H@Xb[:, t, m])
-                Xa_sum = Xa_sum + Xa[:, t, m]
-            Xa_mean[:, t] = Xa_sum / m_len
+            #K = (Pb@H.T)@np.linalg.inv(H@Pb@H.T + R)
+            #K_Pf = K = (Pf@H.T)@np.linalg.inv(H@Pf@H.T + R)
+            #logger.debug("K[0:5, 0:5]\n:{}".format(K[0:5, 0:5]))
+            #logger.debug("K_Pb[0:5, 0:5]\n:{}".format(K_Pb[0:5, 0:5]))
+            #logger.debug("K_Pf[0:5, 0:5]\n:{}".format(K_Pf[0:5, 0:5]))
+            for m in range(m_len):  
+                Xa[:, t, m] = Xb[:, t, m] + K@(Y[:, t]+np.random.normal(loc=0.0, scale=1.0, size=self.N)-H@Xb[:, t, m])
+                Xa_sum += Xa[:, t, m]
+                
+            Xa_mean[:, t] = Xa_sum/ m_len
 
             for m in range(m_len):
                 dXa[:, m] = Xa[:, t, m] - Xa_mean[:, t]
 
             for m in range(m_len):
                 Za = dXa/np.sqrt(m_len-1)
-                Pa_sum = Pa_sum + Za@Za.T
+                Pa_sum += Za@Za.T
 
             Pa[:, :, t] = Pa_sum / m_len
 

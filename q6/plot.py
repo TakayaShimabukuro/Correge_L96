@@ -93,7 +93,7 @@ class Plot_Methods:
             plt.savefig(self.path + "EnKF-PO/EnKF-PO-" + name + ".png")
             plt.close()
 
-    def AnalysisRMSEandTrace(self, t, RMSE, Trace):
+    def AnalysisRMSEandTrace(self, t, RMSE, Trace, name):
         x_step=[50]
         x_start=[0] # day
         x_end=[364] # day
@@ -113,7 +113,7 @@ class Plot_Methods:
             plt.xlabel(x_label)
             plt.ylabel(y_label)
             plt.title(title)
-            plt.savefig(self.path + "AnalysisRMSEandTrace/AnalysisRMSEandTrace-" + str(x_start[j]) +"-" + str(x_end[j]-1) + ".png")
+            plt.savefig(self.path + "AnalysisRMSEandTrace/AnalysisRMSEandTrace-" + name + ".png")
             plt.close()
 
     

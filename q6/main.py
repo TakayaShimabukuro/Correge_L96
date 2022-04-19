@@ -37,8 +37,8 @@ sigma = 1.0
 logger.info('Prosess Start!!')
 step_2year = 2920
 step_t = 1460 # 4step 1day 
-d = 8.0
-m = np.arange(20, 620, 2)
+d = 0.0
+m = np.arange(20, 1020, 2)
 logger.info('-----member : {}------'.format(str(len(m))))
 path = "./q6/result/"
 plot = Plot_Methods(path)
@@ -62,21 +62,16 @@ Xt = Xt_2year[:, step_t:step_2year]
 logger.info('Prosess 3')
 Y = np.zeros((N, step_t))
 np.random.seed(0)
-noise = np.random.normal(loc=mu, scale=sigma, size=N)
 for i in range(step_t):
-    Y[:, i] = Xt[:, i] + noise
-
+    Y[:, i] = Xt[:, i] + np.random.normal(loc=mu, scale=sigma, size=N)
+np.random.seed(None)
 # 4. EnKF
 logger.info('Prosess 4')
-Xa, Xa_mean, Pa = l96.EnKF_PO(Y, m, noise, step_t)
+Xa, Xa_mean, Pa = l96.EnKF_PO(Y, m, step_t)
 
 # 5. FuncObTime
 logger.info('Prosess 5')
-plot.FuncObTime(t_2year, Xt, Y, Xa_mean, "Xa_mean")
-plot.FuncObTime(t_2year, Xt, Y, Xa[:, :, 0], "Xa0")
-plot.FuncObTime(t_2year, Xt, Y, Xa[:, :, 1], "Xa1")
-plot.FuncObTime(t_2year, Xt, Y, Xa[:, :, 2], "Xa2")
-plot.FuncObTime(t_2year, Xt, Y, Xa[:, :, 3], "Xa3")
+plot.FuncObTime(t_2year, Xt, Y, Xa_mean, str(len(m)))
 
 # 6. RMSE, Trace
 logger.info('Prosess 6')
@@ -84,7 +79,7 @@ Xa_RMSE = l96.RMSE(Xa_mean, Xt, step_t)
 Pa_trace = l96.Spread(Pa, step_t)
 
 #6. AnalysisRMSEandTrace
-plot.AnalysisRMSEandTrace(t_2year[:], Xa_RMSE, Pa_trace)
+plot.AnalysisRMSEandTrace(t_2year[:], Xa_RMSE, Pa_trace, str(len(m)))
 plot.AnalysisErrCovariance(Pa)
 
 
