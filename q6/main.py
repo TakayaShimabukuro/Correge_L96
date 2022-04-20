@@ -1,5 +1,6 @@
 # 外部ライブラリ
 from logging import getLogger, DEBUG, basicConfig
+from matplotlib.pyplot import step
 import numpy as np
 
 # 内部ライブラリ
@@ -24,6 +25,7 @@ from model_l96 import Model_L96
 logger = getLogger(__name__)
 logger.setLevel(DEBUG)
 basicConfig(filename='console.log', level=DEBUG, filemode='w')
+np.set_printoptions(threshold=np.inf)
 N = 40
 F = 8.0
 dt = 0.05
@@ -33,21 +35,16 @@ sigma = 1.0
 
 # local parameter
 logger.info('Prosess Start!!')
-step_2year = 2848
-step_t = 1424
-#d = np.arange(0, 0.20, 0.025)
-d = [0.00]
-B = np.arange(0.05, 0.625, 0.025)
-path = "./q5/result/"
-l96 = Model_L96(N, F, dt, delta, d)
+step_2year = 2920
+step_t = 1460 # 4step 1day 
+d = 0.0
+m = np.arange(20, 1020, 2)
+logger.info('-----member : {}------'.format(str(len(m))))
+path = "./q6/result/"
 plot = Plot_Methods(path)
-Xfs = []
-Pfs = []
-Xas = []
-Pas = []
-Xas_RMSE = []
-Pas_Spread = []
-Xa_RMSE_aves = []
+l96 = Model_L96(N, F, dt, delta, d, plot)
+
+np.set_printoptions(suppress=True)
 
 # 1. L96を2年分シミュレーションする
 logger.info('Prosess 1')
@@ -64,10 +61,26 @@ Xt = Xt_2year[:, step_t:step_2year]
 # 3. 真値にノイズを付加する
 logger.info('Prosess 3')
 Y = np.zeros((N, step_t))
+np.random.seed(0)
 for i in range(step_t):
     Y[:, i] = Xt[:, i] + np.random.normal(loc=mu, scale=sigma, size=N)
+np.random.seed(None)
+# 4. EnKF
+logger.info('Prosess 4')
+Xa, Xa_mean, Pa = l96.EnKF_PO(Y, m, step_t)
 
+# 5. FuncObTime
+logger.info('Prosess 5')
+plot.FuncObTime(t_2year, Xt, Y, Xa_mean, str(len(m)))
 
+# 6. RMSE, Trace
+logger.info('Prosess 6')
+Xa_RMSE = l96.RMSE(Xa_mean, Xt, step_t)
+Pa_trace = l96.Spread(Pa, step_t)
+
+#6. AnalysisRMSEandTrace
+plot.AnalysisRMSEandTrace(t_2year[:], Xa_RMSE, Pa_trace, str(len(m)))
+plot.AnalysisErrCovariance(Pa)
 
 
 logger.info('Prosess Finish!!')
