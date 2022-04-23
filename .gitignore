@@ -3,4 +3,8 @@ console.log
 *.png
 *.pyc
 */.pyc
+*__pycache
+*.vscode
+*debug-code.txt
+
 q5/result/TimeMeanRMSE/timeMeanRMSE.xlsx
