@@ -15,12 +15,15 @@ from model_l96 import Model_L96
         logger.debug(X.shape)
         logger.debug('--- Y---')
         logger.debug(Y.shape)
-        logger.debug('--- X1---')
+        logger.debug('--- X1---')ß
         logger.debug(X1.shape)
         logger.debug('--- X2---')
-        logger.debug(X2.shape)
+        logger.debug(X2.shape)ß
         logger.info('------------------------------')
+        logger.info('------------------------------')
+aaaß
 '''
+
 # public parameter
 logger = getLogger(__name__)
 logger.setLevel(DEBUG)
@@ -38,7 +41,7 @@ logger.info('Prosess Start!!')
 step_2year = 2920
 step_t = 1460 # 4step 1day 
 d = 0.0
-m = np.arange(20, 1020, 2)
+m = np.arange(20, 50, 2)
 logger.info('-----member : {}------'.format(str(len(m))))
 path = "./q6/result/"
 plot = Plot_Methods(path)
