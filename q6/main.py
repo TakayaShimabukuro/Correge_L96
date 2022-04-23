@@ -41,7 +41,7 @@ logger.info('Prosess Start!!')
 step_2year = 2920
 step_t = 1460 # 4step 1day 
 d = 0.0
-m = np.arange(20, 50, 2)
+m = np.arange(20, 1020, 2)
 logger.info('-----member : {}------'.format(str(len(m))))
 path = "./q6/result/"
 plot = Plot_Methods(path)
