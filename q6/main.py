@@ -51,7 +51,7 @@ for i in range(step_t):
     Y[:, i] = Xt[:, i] + noise
 np.random.seed(None)
 
-# 4. This process is conducted to analize EnKF.
+# 4. This process is conducted to analyze using EnKF.
 logger.info('Prosess 4')
 Xa, Xa_mean, Pa = l96.EnKF_PO(Y, m, step_t)
 

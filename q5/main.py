@@ -73,7 +73,7 @@ for i in range(step_t):
     Y[:, i] = Xt[:, i] + noise
 np.random.seed(None)
 
-# 4.This process is conducted to analize 3DVAR.
+# 4.This process is conducted to analyze using 3DVAR.
 logger.info('Prosess 4')
 for i in range(len(B_step)):
     B = np.diag([B_step[i]]*N)
