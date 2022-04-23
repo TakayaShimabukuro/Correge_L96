@@ -7,10 +7,12 @@ logger = getLogger(__name__)
 
 class Model_L96:
     # 初期値
-    def __init__(self, N, F, dt, delta, plot):
+    def __init__(self, N, F, dt, delta, d, plot):
         self.N = N
         self.F = F
         self.dt = dt
+        self.delta = delta
+        self.d = d
         self.plot = plot
 
     # X1[40, 1]を初期値とするstep分のシミュレーションを行う。
