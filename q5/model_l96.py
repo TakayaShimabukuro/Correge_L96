@@ -4,13 +4,14 @@ from logging import getLogger, DEBUG, basicConfig
 from plot import Plot_Methods
 logger = getLogger(__name__)
 
+
 class Model_L96:
     # 初期値
     def __init__(self, N, F, dt, delta, d):
         self.N = N
         self.F = F
         self.dt = dt
-        self.delta = delta 
+        self.delta = delta
         self.d = d
 
     # Lorenz 96
@@ -21,18 +22,18 @@ class Model_L96:
         for i in range(1, self.N-1):
             f[i] = (x[i+1]-x[i-2])*x[i-1]-x[i]+self.F
         return f
-    
+
     # ルンゲクッタ4次
     def RK4(self, X1):
         k1 = self.l96(X1) * self.dt
         k2 = self.l96(X1 + k1*0.5) * self.dt
         k3 = self.l96(X1 + k2*0.5) * self.dt
         k4 = self.l96(X1 + k3) * self.dt
-        return X1 + (k1 + 2.0*k2 + 2.0*k3 + k4) /6.0
+        return X1 + (k1 + 2.0*k2 + 2.0*k3 + k4) / 6.0
 
     # カルマンフィルタ
     def KF(self, Y_all, d, delate_queue):
-        
+
         # init setting
         step = len(Y_all[0])
         Xf = np.zeros((self.N, step))
@@ -50,21 +51,21 @@ class Model_L96:
         Pf[:, :, 0] = np.diag([25]*self.N)
         Xa[:, 0] = Y_all[:, 100]
         Pa[:, :, 0] = np.diag([25]*self.N)
-        
+
         for t in range(1, step):
             # progress 2
-            M = self.get_M(Xa[:, t-1])            
+            M = self.get_M(Xa[:, t-1])
             Xf[:, t] = self.RK4(Xa[:, t-1])
             Pf[:, :, t] = (M@Pa[:, :, t-1]@M.T)*(1 + d)
             # progress 3
             K = (Pf[:, :, t]@H.T)@np.linalg.inv(H@Pf[:, :, t]@H.T + R)
             logger.debug("K.shape:{}".format(K.shape), )
             logger.debug("K[0:5, 0:5]\n:{}".format(K[0:5, 0:5]))
-            Xa[:, t] = Xf[:, t] + K@(Y[:,t] - H@Xf[:, t])
+            Xa[:, t] = Xf[:, t] + K@(Y[:, t] - H@Xf[:, t])
             Pa[:, :, t] = (I-K@H)@Pf[:, :, t]
         # progress 4
         return Xa
-    
+
     # 3DVAR
     def analyze_3DVAR(self, Y, B, step):
         Xb = np.zeros((self.N, step))
@@ -76,10 +77,10 @@ class Model_L96:
         for t in range(1, step):
             Xb[:, t] = self.RK4(Xa[:, t-1])
             K = (B@H.T)@np.linalg.inv(H@B@H.T + R)
-            Xa[:, t] = Xb[:, t] + K@(Y[:,t] - H@Xb[:, t])
+            Xa[:, t] = Xb[:, t] + K@(Y[:, t] - H@Xb[:, t])
 
         return Xa
-    
+
     # 3DVAR-case
     def analyze_3DVAR_case(self, Y_all, B, step, delate_queue):
         Xb = np.zeros((self.N, step))
@@ -95,14 +96,13 @@ class Model_L96:
         logger.debug(Y.shape)
         logger.debug(H)
         '''
-        
+
         Xa[:, 0] = Y_all[:, 100]
 
         for t in range(1, step):
             Xb[:, t] = self.RK4(Xa[:, t-1])
             K = (B@H.T)@np.linalg.inv(H@B@H.T + R)
-            Xa[:, t] = Xb[:, t] + K@(Y[:,t] - H@Xb[:, t])
-            
+            Xa[:, t] = Xb[:, t] + K@(Y[:, t] - H@Xb[:, t])
 
         return Xa
 
@@ -118,7 +118,7 @@ class Model_L96:
             M[:, i] = (self.RK4(a)-self.RK4(b)) / self.delta
 
         return M
-    
+
     # RMSEのaveを取得
     def get_RMSE_Ave(self, d, Xas_RMSE):
         rmse_aves = []
@@ -126,7 +126,7 @@ class Model_L96:
             rmse_ave = sum(Xas_RMSE[i]) / len(Xas_RMSE[i])
             rmse_aves.append(rmse_ave)
         return rmse_aves
-    
+
     # RMSEを取得
     def RMSE(self, X1, X2, step):
         rmse = np.zeros((step))
@@ -134,7 +134,7 @@ class Model_L96:
             sub = X1[1:, i] - X2[1:, i]
             rmse[i] = np.sqrt(np.mean(sub**2))
         return rmse
-    
+
     # Spreadを取得
     def Spread(self, P):
         return np.sqrt(np.trace(P)/len(P))
@@ -149,9 +149,9 @@ class Model_L96:
         for j in range(1, step):
             X1 = self.RK4(X1)
             Xn[:, j] = X1[:]
-            t[j] =self.dt*j*5.0
+            t[j] = self.dt*j*5.0
         return Xn, t
-    
+
     def PartOfdata(self, data_all, delate_queue):
         data = np.delete(data_all, delate_queue, axis=0)
         data = np.delete(data, delate_queue, axis=1)
@@ -163,12 +163,12 @@ class Model_L96:
             que = np.arange(0, 25, 5)
             for i, data in enumerate(que):
                 deleate_queue.append(np.arange(0, data, delete_step))
-        
-        if delete_step >=2:
+
+        if delete_step >= 2:
             que = np.arange(15, 40, 5)
             for i, data in enumerate(que):
                 sub_range = 5*i*delete_step
                 deleate_queue.append(np.arange(0, sub_range, delete_step))
-        
+
         logger.debug(deleate_queue)
         return deleate_queue

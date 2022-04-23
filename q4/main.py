@@ -94,7 +94,7 @@ while FLG:
     # 8. Sensitivity to Infl. Factor
     logger.info('Prosess 8')
     rmse_aves = l96.get_RMSE_Ave(d, Xas_RMSE)
-    #if rmse_aves[2] < 0.4:
+    # if rmse_aves[2] < 0.4:
     FLG = False
     #plot.InflationRatio(d, rmse_aves)
 

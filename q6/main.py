@@ -39,7 +39,7 @@ sigma = 1.0
 # local parameter
 logger.info('Prosess Start!!')
 step_2year = 2920
-step_t = 1460 # 4step 1day 
+step_t = 1460  # 4step 1day
 d = 0.0
 m = np.arange(20, 1020, 2)
 logger.info('-----member : {}------'.format(str(len(m))))
@@ -81,7 +81,7 @@ logger.info('Prosess 6')
 Xa_RMSE = l96.RMSE(Xa_mean, Xt, step_t)
 Pa_trace = l96.Spread(Pa, step_t)
 
-#6. AnalysisRMSEandTrace
+# 6. AnalysisRMSEandTrace
 plot.AnalysisRMSEandTrace(t_2year[:], Xa_RMSE, Pa_trace, str(len(m)))
 plot.AnalysisErrCovariance(Pa)
 

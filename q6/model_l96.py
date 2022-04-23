@@ -100,25 +100,27 @@ class Model_L96:
 
         # t = 0
         for m in range(m_len):
-            Xb[:, 0, m] = Y[:, m_temp[m]]+(np.random.normal(loc=0.0, scale=1.0, size=self.N)*5)
-            Xa[:, 0, m] = Y[:, m_temp[m]]+(np.random.normal(loc=0.0, scale=1.0, size=self.N)*5)
+            Xb[:, 0, m] = Y[:, m_temp[m]] + \
+                (np.random.normal(loc=0.0, scale=1.0, size=self.N)*5)
+            Xa[:, 0, m] = Y[:, m_temp[m]] + \
+                (np.random.normal(loc=0.0, scale=1.0, size=self.N)*5)
             logger.debug(" Xb[:, 0, m]\n:{}".format(Xb[:, 0, m]))
         Pa[:, :, 0] = np.diag([25]*self.N)
-        
+
         # t > 0
         for t in range(1, step):
             Xb_sum = np.zeros(self.N)
             Xa_sum = np.zeros(self.N)
-            Pa_sum = np.zeros((self.N, self.N))  
+            Pa_sum = np.zeros((self.N, self.N))
             dXb = np.zeros((self.N, m_len))
             dXa = np.zeros((self.N, m_len))
 
             for m in range(m_len):
                 Xb[:, t, m] = self.RK4(Xa[:, t-1, m])
                 Xb_sum += Xb[:, t, m]
-            
+
             Xb_mean = Xb_sum / m_len
-            
+
             for m in range(m_len):
                 dXb[:, m] = Xb[:, t, m]-Xb_mean
             Zb = dXb / np.sqrt(m_len-1)
@@ -128,23 +130,25 @@ class Model_L96:
             #Xb_solo[:, t] = self.RK4(Xa_solo[:, t-1])
             #logger.debug("Xb_solo\n:{}".format(Xb_solo[0:5, 0:5]))
             #logger.debug("Xb\n:{}".format(Xb[0:5, 0:5, 0]))
-            #Pb = Zb@Zb.T*(1 + self.d) 
+            #Pb = Zb@Zb.T*(1 + self.d)
             #Pf = (M@Pa[:, :, t-1]@M.T)*(1 + self.d)
             #logger.debug("Pb\n:{}".format(Pb[0:5, 0:5]))
             #logger.debug("Pf\n:{}".format(Pf[0:5, 0:5]))
-            
 
-            K = (Zb @ (np.linalg.inv(I + Yb.T@np.linalg.inv(R)@ Yb)) @ Yb.T @ np.linalg.inv(R))
+            K = (Zb @ (np.linalg.inv(I + Yb.T@np.linalg.inv(R) @ Yb))
+                 @ Yb.T @ np.linalg.inv(R))
             #K = (Pb@H.T)@np.linalg.inv(H@Pb@H.T + R)
             #K_Pf = K = (Pf@H.T)@np.linalg.inv(H@Pf@H.T + R)
             #logger.debug("K[0:5, 0:5]\n:{}".format(K[0:5, 0:5]))
             #logger.debug("K_Pb[0:5, 0:5]\n:{}".format(K_Pb[0:5, 0:5]))
             #logger.debug("K_Pf[0:5, 0:5]\n:{}".format(K_Pf[0:5, 0:5]))
-            for m in range(m_len):  
-                Xa[:, t, m] = Xb[:, t, m] + K@(Y[:, t]+np.random.normal(loc=0.0, scale=1.0, size=self.N)-H@Xb[:, t, m])
+            for m in range(m_len):
+                Xa[:, t, m] = Xb[:, t, m] + \
+                    K@(Y[:, t]+np.random.normal(loc=0.0,
+                       scale=1.0, size=self.N)-H@Xb[:, t, m])
                 Xa_sum += Xa[:, t, m]
-                
-            Xa_mean[:, t] = Xa_sum/ m_len
+
+            Xa_mean[:, t] = Xa_sum / m_len
 
             for m in range(m_len):
                 dXa[:, m] = Xa[:, t, m] - Xa_mean[:, t]
