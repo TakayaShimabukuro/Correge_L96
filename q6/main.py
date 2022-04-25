@@ -51,20 +51,14 @@ for i in range(step_t):
     Y[:, i] = Xt[:, i] + noise
 np.random.seed(None)
 
-# 4. This process is conducted to analyze using EnKF.
+# 4. This process is conducted to analyze using EnKF and plot thier data.
 logger.info('Prosess 4')
 Xa, Xa_mean, Pa = l96.EnKF_PO(Y, m, step_t)
-
-# 5. This process is conducted to plot Xa_mean value mean.
-logger.info('Prosess 5')
 plot.FuncObTime(t_2year, Xt, Y, Xa_mean, str(len(m)))
 
-# 6. This process is conducted to get Xa RMSE and Pb Trace.
-logger.info('Prosess 6')
+# 5. This process is conducted to get Xa RMSE and Pb Trace and plot thier data.
+logger.info('Prosess 5')
 Xa_RMSE = l96.RMSE(Xa_mean, Xt, step_t)
 Pa_trace = l96.Spread(Pa, step_t)
-
-# 7. AnalysisRMSEandTrace
-logger.info('Prosess 7')
 plot.AnalysisRMSEandTrace(t_2year[:], Xa_RMSE, Pa_trace, str(len(m)))
 plot.AnalysisErrCovariance(Pa)
