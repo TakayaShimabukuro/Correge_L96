@@ -141,7 +141,7 @@ class Plot_Methods:
         plt.close()
     
 
-    def AnalysisErrCovariance(self, Pa):
+    def AnalysisErrCovariance(self, Pa, name):
         x_step=[5]
         x_start=[0]
         x_end=[41]
@@ -167,7 +167,7 @@ class Plot_Methods:
             plt.xlabel(x_label)
             plt.ylabel(y_label)
             plt.title(title)
-            plt.savefig(self.path + "AnalysisErrCovariance/AnalysisErrCovariance-delta-day-"+str(day[k])+ ".png")
+            plt.savefig(self.path + "AnalysisErrCovariance/AnalysisErrCovariance-delta-day-"+str(day[k])+ name+".png")
             plt.close()
     
     def TimeMeanRMSE(self, B_step, Xas_RMSE):

@@ -17,7 +17,7 @@ mu = 0.0
 sigma = 1.0
 step_2year = 2920
 step_t = 1460  # 4step = 1day
-m = np.arange(20, 30, 2)
+m = np.arange(20, 330, 2)
 path = "./q6/result/"
 
 # DEBUG SETTING
@@ -53,12 +53,20 @@ np.random.seed(None)
 
 # 4. This process is conducted to analyze using EnKF and plot thier data.
 logger.info('Prosess 4')
-Xa, Xa_mean, Pa = l96.EnKF_PO(Y, m, step_t)
-plot.FuncObTime(t_2year, Xt, Y, Xa_mean, str(len(m)))
+Xa, Xa_mean, Pa = l96.EnKF_PO(Y, m, step_t, False)
+#plot.FuncObTime(t_2year, Xt, Y, Xa_mean, str(len(m)))
 
 # 5. This process is conducted to get Xa RMSE and Pb Trace and plot thier data.
 logger.info('Prosess 5')
 Xa_RMSE = l96.RMSE(Xa_mean, Xt, step_t)
 Pa_trace = l96.Spread(Pa, step_t)
 plot.AnalysisRMSEandTrace(t_2year[:], Xa_RMSE, Pa_trace, str(len(m)))
-plot.AnalysisErrCovariance(Pa)
+plot.AnalysisErrCovariance(Pa, str(len(m)))
+
+# 5. This process is conducted to locally analyze using EnKF and plot thier data.
+logger.info('Prosess 6')
+Xa_local, Xa_mean_local, Pa_local = l96.EnKF_PO(Y, m, step_t, True)
+Xa_RMSE_local = l96.RMSE(Xa_mean_local, Xt, step_t)
+Pa_trace_local = l96.Spread(Pa_local, step_t)
+plot.AnalysisRMSEandTrace(t_2year[:], Xa_RMSE, Pa_trace, str(len(m)) + "-local")
+plot.AnalysisErrCovariance(Pa_trace_local, "-local")
