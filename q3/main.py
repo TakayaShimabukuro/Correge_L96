@@ -66,8 +66,8 @@ noise = list(map(lambda val: val*std, noise))
 logger.info('Prosess 4')
 Xn_forcast = np.zeros((N, step_1year))
 for i in range(step_1year):
-    Xn_forcast[:, i] = list(map(lambda val1, val2: val1 + val2, Xn_1year[:, i], noise))
-
+    Xn_forcast[:, i] = list(
+        map(lambda val1, val2: val1 + val2, Xn_1year[:, i], noise))
 
 
 logger.info('Prosess finish')
