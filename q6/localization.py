@@ -1,21 +1,34 @@
-# External Libraries
+# EXTERNAL LIBRARIES
 from logging import getLogger, DEBUG, basicConfig
 from matplotlib.pyplot import step
 import numpy as np
 
-# Internal Libraries
+# INTERNAL LIBRARIES
 from plot import Plot_Methods
-
 # PARAMETER
 N = 40
 path = "./q6/result/"
-L = np.zeros((N,N))
-
-for i in range(len(N)):
-    for j in range(len(N)):
-        d = i-j
-        L[i, j] = np.exp()
+L = np.zeros((N, N))
+sigmas = [1, 3, 5]
 
 # INSTANCE
 plot = Plot_Methods(path)
-plot.Debug(L, "Localization")
+
+
+class Localization:
+    # METHOD
+    def get_distance(self, i, j):
+        normal_data = abs(i-j)
+        reverse_data = 40-abs(i-j)
+        return min(normal_data, reverse_data)
+
+    def get_L(self, sigma):
+        for i in range(N):
+            for j in range(N):
+                d = self.get_distance(i, j)
+                if 2*np.sqrt(10/(3*sigma)):
+                    L[i, j] = np.exp(-(d*d)/(2*sigma))
+                else:
+                    L[i, j] = 0
+        #plot.Debug(L, "Localization-" + str(sigma))
+        return L

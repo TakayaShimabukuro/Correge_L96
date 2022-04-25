@@ -7,11 +7,12 @@ logger = getLogger(__name__)
 
 class Model_L96:
     # 初期値
-    def __init__(self, N, F, dt, delta, plot):
+    def __init__(self, N, F, dt, delta, plot, local):
         self.N = N
         self.F = F
         self.dt = dt
         self.plot = plot
+        self.local= local
 
     # X1[40, 1]を初期値とするstep分のシミュレーションを行う。
     def analyze_model(self, Xn, X1_tmp, step):
@@ -87,15 +88,16 @@ class Model_L96:
         Xa = np.zeros(((self.N, step, m_len)))
         Xa_mean = np.zeros((self.N, step))
         Pa = np.zeros(((self.N, self.N, step)))
+        L = np.zeros((self.N, self.N))
         H = np.identity(self.N)
         R = np.identity(self.N)
         I = np.identity(m_len)
+        sigma = 1
 
         # t = 0
         for m in range(m_len):
-            Xb[:, 0, m] = Y[:, m_temp[m]]+(np.random.normal(loc=0.0, scale=1.0, size=self.N)*5)
-            Xa[:, 0, m] = Y[:, m_temp[m]]+(np.random.normal(loc=0.0, scale=1.0, size=self.N)*5)
-            logger.debug(" Xb[:, 0, m]\n:{}".format(Xb[:, 0, m]))
+            Xb[:, 0, m] = Y[:, m_temp[m]]+(np.random.normal(loc=0.0, scale=1.0, size=self.N))
+            Xa[:, 0, m] = Y[:, m_temp[m]]+(np.random.normal(loc=0.0, scale=1.0, size=self.N))
         Pa[:, :, 0] = np.diag([25]*self.N)
         
         # t > 0
@@ -116,12 +118,13 @@ class Model_L96:
                 dXb[:, m] = Xb[:, t, m]-Xb_mean
             Zb = dXb / np.sqrt(m_len-1)
             Yb = H@Zb
-            
+            logger.debug(L.shape)
             if FLG_Localization:
-                K = Zb@Yb.T@np.linalg.inv(Yb@Yb.T + R)
+                L = self.local.get_L(sigma)
+                K = L*(Zb@Yb.T)@np.linalg.inv(Yb@Yb.T + R)
             else:
-                K = Zb@Yb.T@H.T@np.linalg.inv(Yb@Yb.T + R)
-
+                K = Zb@Yb.T@np.linalg.inv(Yb@Yb.T + R)
+            
             for m in range(m_len):  
                 Xa[:, t, m] = Xb[:, t, m] + K@(Y[:, t]+np.random.normal(loc=0.0, scale=1.0, size=self.N)-H@Xb[:, t, m])
                 Xa_sum += Xa[:, t, m]
