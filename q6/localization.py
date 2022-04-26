@@ -26,9 +26,8 @@ class Localization:
         for i in range(N):
             for j in range(N):
                 d = self.get_distance(i, j)
-                if 2*np.sqrt(10/(3*sigma)):
-                    L[i, j] = np.exp(-(d*d)/(2*sigma))
+                if 2*np.sqrt(10.0/(3.0*sigma)):
+                    L[i, j] = np.exp(-(d*d)/(2.0*sigma))
                 else:
-                    L[i, j] = 0
-        #plot.Debug(L, "Localization-" + str(sigma))
+                    L[i, j] = 0.0
         return L

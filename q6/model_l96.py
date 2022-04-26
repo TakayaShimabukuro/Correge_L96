@@ -7,12 +7,11 @@ logger = getLogger(__name__)
 
 class Model_L96:
     # 初期値
-    def __init__(self, N, F, dt, delta, plot, local):
+    def __init__(self, N, F, dt, delta, plot):
         self.N = N
         self.F = F
         self.dt = dt
         self.plot = plot
-        self.local= local
 
     # X1[40, 1]を初期値とするstep分のシミュレーションを行う。
     def analyze_model(self, Xn, X1_tmp, step):
@@ -82,18 +81,14 @@ class Model_L96:
         return YO
 
     # PO法によるEnKF
-    def EnKF_PO(self, Y, m_temp, step, FLG_Localization):
+    def EnKF_PO(self, Y, m_temp, step, FLG_Localization, L):
         m_len = len(m_temp)
         Xb = np.zeros(((self.N, step, m_len)))
         Xa = np.zeros(((self.N, step, m_len)))
         Xa_mean = np.zeros((self.N, step))
         Pa = np.zeros(((self.N, self.N, step)))
-        L = np.zeros((self.N, self.N))
         H = np.identity(self.N)
         R = np.identity(self.N)
-        I = np.identity(m_len)
-        sigma = 1
-
         # t = 0
         for m in range(m_len):
             Xb[:, 0, m] = Y[:, m_temp[m]]+(np.random.normal(loc=0.0, scale=1.0, size=self.N))
@@ -118,12 +113,13 @@ class Model_L96:
                 dXb[:, m] = Xb[:, t, m]-Xb_mean
             Zb = dXb / np.sqrt(m_len-1)
             Yb = H@Zb
-            logger.debug(L.shape)
             if FLG_Localization:
-                L = self.local.get_L(sigma)
-                K = L*(Zb@Yb.T)@np.linalg.inv(Yb@Yb.T + R)
+                K = Zb@Yb.T@np.linalg.inv(Yb@Yb.T + R)
+                K *= L
             else:
                 K = Zb@Yb.T@np.linalg.inv(Yb@Yb.T + R)
+            #self.plot.Debug(Zb@Yb.T, "Pb-" + str(t))
+            #self.plot.Debug(K, "K-"+ str(t))
             
             for m in range(m_len):  
                 Xa[:, t, m] = Xb[:, t, m] + K@(Y[:, t]+np.random.normal(loc=0.0, scale=1.0, size=self.N)-H@Xb[:, t, m])

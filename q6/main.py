@@ -18,8 +18,12 @@ mu = 0.0
 sigma = 1.0
 step_2year = 2920
 step_t = 1460  # 4step = 1day
-m = np.arange(20, 320, 2)
+m = np.arange(20, 60, 2)
 path = "./q6/result/"
+L = np.zeros((N, N))
+L_sigmas = np.arange(1.0, 40.0, 4.0)
+spinup = 400
+result = []
 
 # DEBUG SETTING
 logger = getLogger(__name__)
@@ -30,7 +34,7 @@ np.set_printoptions(threshold=np.inf, suppress=True)
 # INSTANCE
 plot = Plot_Methods(path)
 local = Localization()
-l96 = Model_L96(N, F, dt, delta, plot, local)
+l96 = Model_L96(N, F, dt, delta, plot)
 
 # 1. This process is conducted to simulate L96 for 2years
 logger.info('Prosess 1')
@@ -53,22 +57,36 @@ for i in range(step_t):
     Y[:, i] = Xt[:, i] + noise
 np.random.seed(None)
 
+
+'''
+
 # 4. This process is conducted to analyze using EnKF and plot thier data.
 logger.info('Prosess 4')
-Xa, Xa_mean, Pa = l96.EnKF_PO(Y, m, step_t, False)
-#plot.FuncObTime(t_2year, Xt, Y, Xa_mean, str(len(m)))
+Xa, Xa_mean, Pa = l96.EnKF_PO(Y, m, step_t, False, L)
+plot.FuncObTime(t_2year, Xt, Y, Xa_mean, str(len(m))+ "all")
 
 # 5. This process is conducted to get Xa RMSE and Pb Trace and plot thier data.
 logger.info('Prosess 5')
 Xa_RMSE = l96.RMSE(Xa_mean, Xt, step_t)
 Pa_trace = l96.Spread(Pa, step_t)
-plot.AnalysisRMSEandTrace(t_2year[:], Xa_RMSE, Pa_trace, "-all")
+plot.AnalysisRMSEandTrace(t_2year[:], Xa_RMSE, Pa_trace, "all")
 plot.AnalysisErrCovariance(Pa, "-all")
+logger.info("-- Xa_RMSE --")
+logger.debug(np.mean(Xa_RMSE[spinup:])) #4.474517501112667
 
-# 6. This process is conducted to locally analyze using EnKF and plot thier data.
-logger.info('Prosess 6')
-Xa_local, Xa_mean_local, Pa_local = l96.EnKF_PO(Y, m, step_t, True)
-Xa_RMSE_local = l96.RMSE(Xa_mean_local, Xt, step_t)
-Pa_trace_local = l96.Spread(Pa_local, step_t)
-plot.AnalysisRMSEandTrace(t_2year[:], Xa_RMSE_local, Pa_trace_local, "-local")
-plot.AnalysisErrCovariance(Pa_local, "-local")
+'''
+for i in range(len(L_sigmas)):
+    # 6. This process is conducted to analyze using EnKF and plot thier data.
+    logger.info('Prosess 6')
+    L = local.get_L(L_sigmas[i])
+    Xa, Xa_mean, Pa  = l96.EnKF_PO(Y, m, step_t, True, L)
+    # 7. This process is conducted to locally analyze using EnKF and plot thier data.
+    logger.info('Prosess 7')
+    Xa_RMSE = l96.RMSE(Xa_mean, Xt, step_t)
+    Pa_trace = l96.Spread(Pa, step_t)
+    plot.AnalysisRMSEandTrace(t_2year[:], Xa_RMSE, Pa_trace, "local-" + str(L_sigmas[i]))
+    plot.AnalysisErrCovariance(Pa, "local-" + str(L_sigmas[i]))
+    result.append(np.mean(Xa_RMSE[spinup:]))
+
+plot.TimeMeanRMSE(L_sigmas, result)
+

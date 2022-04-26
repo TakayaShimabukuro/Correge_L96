@@ -152,7 +152,7 @@ class Plot_Methods:
         self.make_file(self.path+"/AnalysisErrCovariance")
 
         j = 0
-        bounds = [-0.5, -0.3, -0.1, -0.05, -0.01, 0, 0.01, 0.05, 0.1, 0.3, 0.5]
+        bounds = [-0.5, -0.3, -0.1, -0.05, -0.01, 0.01, 0.05, 0.1, 0.3, 0.5]
         cmap = self.createCorlorMap("coolwarm", bounds)
         norm = BoundaryNorm(bounds,cmap.N)
 
@@ -172,21 +172,12 @@ class Plot_Methods:
     
     def TimeMeanRMSE(self, B_step, Xas_RMSE):
         self.make_file(self.path+"/TimeMeanRMSE")
-        x_step=[0.1]
-        x_start=[0.00]
-        x_end=[0.7]
-        y_step=[0.5]
-        y_start=[0.00]
-        y_end=[3.2]
-        x_label = "B"
+        x_label = "sigma"
         y_label = "ave RMSE(Time mean)"
-        title = "Lecture5-3DVAR"
-        j = 0
+        title = "Lecture6-EnKF"
         plt.figure()
         plt.plot(B_step, Xas_RMSE, marker="o",fillstyle='none', color="b", linestyle="dashed", lw=0.8)
         plt.grid(color='k', linestyle='dotted', linewidth=0.5)
-        plt.xlim(x_start[j],x_end[j]-x_step[j])
-        plt.ylim(y_start[j],y_end[j]-y_step[j])
         plt.xlabel(x_label)
         plt.ylabel(y_label)
         plt.title(title)
@@ -205,7 +196,7 @@ class Plot_Methods:
             RANGE = MIN
         RANGE = round(RANGE, 1-len(str(RANGE).split('.')[0]))
         n = RANGE/5
-        bounds =  [-RANGE, -n*4, -n*3, -n*2, -n, -0.1, 0.1, n, n*2, n*3, n*4, RANGE]
+        bounds =  [-RANGE, -n*4, -n*3, -n*2, -n, -n/10, n/10, n, n*2, n*3, n*4, RANGE]
         cmap = self.createCorlorMap("bwr", bounds)
         norm = BoundaryNorm(bounds,cmap.N)
 
