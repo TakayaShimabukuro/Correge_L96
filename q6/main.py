@@ -18,10 +18,10 @@ mu = 0.0
 sigma = 1.0
 step_2year = 2920
 step_t = 1460  # 4step = 1day
-m = np.arange(20, 60, 2)
+m = np.arange(20, 20 + 2 *20, 2)
 path = "./q6/result/"
 L = np.zeros((N, N))
-L_sigmas = np.arange(1.0, 40.0, 4.0)
+L_sigmas = np.arange(1.0, 40.0, 2.0)
 spinup = 400
 result = []
 
@@ -57,9 +57,7 @@ for i in range(step_t):
     Y[:, i] = Xt[:, i] + noise
 np.random.seed(None)
 
-
 '''
-
 # 4. This process is conducted to analyze using EnKF and plot thier data.
 logger.info('Prosess 4')
 Xa, Xa_mean, Pa = l96.EnKF_PO(Y, m, step_t, False, L)
@@ -71,14 +69,14 @@ Xa_RMSE = l96.RMSE(Xa_mean, Xt, step_t)
 Pa_trace = l96.Spread(Pa, step_t)
 plot.AnalysisRMSEandTrace(t_2year[:], Xa_RMSE, Pa_trace, "all")
 plot.AnalysisErrCovariance(Pa, "-all")
-logger.info("-- Xa_RMSE --")
-logger.debug(np.mean(Xa_RMSE[spinup:])) #4.474517501112667
+
 
 '''
 for i in range(len(L_sigmas)):
     # 6. This process is conducted to analyze using EnKF and plot thier data.
     logger.info('Prosess 6')
     L = local.get_L(L_sigmas[i])
+    plot.Debug(L, "Localization-" + str(L_sigmas[i]))
     Xa, Xa_mean, Pa  = l96.EnKF_PO(Y, m, step_t, True, L)
     # 7. This process is conducted to locally analyze using EnKF and plot thier data.
     logger.info('Prosess 7')
