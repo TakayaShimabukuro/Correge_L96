@@ -27,7 +27,6 @@ class Model_L96:
         return Xn, t
 
     # Lorenz 96
-
     def l96(self, x):
         f = np.zeros_like(x)
         f[0] = (x[1]-x[self.N-2])*x[self.N-1]-x[0]+self.F
@@ -37,7 +36,6 @@ class Model_L96:
         return f
 
     # ルンゲクッタ4次
-
     def RK4(self, X1):
         k1 = self.l96(X1) * self.dt
         k2 = self.l96(X1 + k1*0.5) * self.dt
@@ -80,8 +78,10 @@ class Model_L96:
             YO[:, 0, t] = Y[:, t]
         return YO
 
-    # PO法によるEnKF
-    def EnKF_PO(self, Y, m_temp, step, FLG_Localization, L):
+    # ETKF
+    def ETKF(self, Y, m_temp, step):
+
+        # PARAMETER
         m_len = len(m_temp)
         Xb = np.zeros(((self.N, step, m_len)))
         Xa = np.zeros(((self.N, step, m_len)))
@@ -89,20 +89,22 @@ class Model_L96:
         Pa = np.zeros(((self.N, self.N, step)))
         H = np.identity(self.N)
         R = np.identity(self.N)
-        # t = 0
+        I = np.identity(m_len)
         for m in range(m_len):
             Xb[:, 0, m] = Y[:, m_temp[m]]+(np.random.normal(loc=0.0, scale=1.0, size=self.N))
             Xa[:, 0, m] = Y[:, m_temp[m]]+(np.random.normal(loc=0.0, scale=1.0, size=self.N))
         Pa[:, :, 0] = np.diag([25]*self.N)
         
-        # t > 0
+        # PROCESS
         for t in range(1, step):
+
+            # PARAMETER that is necessary to update.
             Xb_sum = np.zeros(self.N)
             Xa_sum = np.zeros(self.N)
-            Pa_sum = np.zeros((self.N, self.N))  
             dXb = np.zeros((self.N, m_len))
             dXa = np.zeros((self.N, m_len))
 
+            # Background Step
             for m in range(m_len):
                 Xb[:, t, m] = self.RK4(Xa[:, t-1, m])
                 Xb_sum += Xb[:, t, m]
@@ -113,27 +115,36 @@ class Model_L96:
                 dXb[:, m] = Xb[:, t, m]-Xb_mean
             Zb = dXb / np.sqrt(m_len-1)
             Yb = H@Zb
-            if FLG_Localization:
-                K = Zb@Yb.T@np.linalg.inv(Yb@Yb.T + R)
-                K *= L
-            else:
-                K = Zb@Yb.T@np.linalg.inv(Yb@Yb.T + R)
-            #self.plot.Debug(Zb@Yb.T, "Pb-" + str(t))
-            #self.plot.Debug(K, "K-"+ str(t))
-            
-            for m in range(m_len):  
-                Xa[:, t, m] = Xb[:, t, m] + K@(Y[:, t]+np.random.normal(loc=0.0, scale=1.0, size=self.N)-H@Xb[:, t, m])
+            Pb_tilde = I
+
+            # Analysis Step
+            Pa_tilde = np.linalg.inv(np.linalg.inv(Pb_tilde) + Yb.T@np.linalg.inv(R)@Yb)
+            d_ob = Y[:, t] - H@Xb_mean
+            #Pa_tilde = np.linalg.inv(I + Yb.T@R@Yb)
+            T = (Pa_tilde@Yb.T@R@d_ob*1)+(np.sqrt(m-1)*np.sqrt(Pa_tilde))
+            ZbT = Zb@T
+
+            '''
+            logger.info("--- Debug1 ---")
+            logger.debug("d_ob.shape:\n{}".format(d_ob.shape))
+            logger.debug("d_ob:\n{}".format(d_ob[0:3]))
+            logger.debug("Pa_tilde.shape:\n{}".format(Pa_tilde.shape))
+            logger.debug("Pa_tilde:\n{}".format(Pa_tilde[0:3, 0:3]))
+            logger.debug("T.shape:\n{}".format(T.shape))
+            logger.debug("T:\n{}".format(T[0:3, 0:3]))
+            logger.debug("ZbT.shape:\n{}".format(ZbT.shape))
+            logger.debug("ZbT:\n{}".format(ZbT[0:3, 0:3]))
+            '''
+
+            for m in range(m_len):
+                Xa[:, t, m] = Xb[:, t, m] + ZbT[:, m]
                 Xa_sum += Xa[:, t, m]
-                
+            
             Xa_mean[:, t] = Xa_sum/ m_len
 
             for m in range(m_len):
                 dXa[:, m] = Xa[:, t, m] - Xa_mean[:, t]
-
-            for m in range(m_len):
-                Za = dXa/np.sqrt(m_len-1)
-                Pa_sum += Za@Za.T
-
-            Pa[:, :, t] = Pa_sum / m_len
+            Za = dXa/np.sqrt(m_len-1)
+            Pa[:, :, t] = Za@Pa_tilde@Za.T
 
         return Xa, Xa_mean, Pa

@@ -5,15 +5,11 @@ import numpy as np
 
 # INTERNAL LIBRARIES
 from plot import Plot_Methods
+
 # PARAMETER
 N = 40
-path = "./q6/result/"
 L = np.zeros((N, N))
 sigmas = [1, 3, 5]
-
-# INSTANCE
-plot = Plot_Methods(path)
-
 
 class Localization:
     # METHOD

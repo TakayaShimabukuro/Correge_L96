@@ -18,8 +18,9 @@ mu = 0.0
 sigma = 1.0
 step_2year = 2920
 step_t = 1460  # 4step = 1day
-m = np.arange(20, 20 + 2 *20, 2)
-path = "./q6/result/"
+num = 10 # member の個数
+m = np.arange(20, 20+2*num, 2)
+path = "./q6-LETKF/result/"
 L = np.zeros((N, N))
 L_sigmas = np.arange(1.0, 40.0, 2.0)
 spinup = 400
@@ -37,6 +38,7 @@ local = Localization()
 l96 = Model_L96(N, F, dt, delta, plot)
 
 # 1. This process is conducted to simulate L96 for 2years
+logger.info('--- Start ---')
 logger.info('Prosess 1')
 Xt_2year = np.zeros((N, step_2year))
 Xt1_2year = float(F)*np.ones(N)
@@ -59,7 +61,13 @@ np.random.seed(None)
 
 # 4. ETKF
 logger.info('Prosess 4')
-Xa, Xa_mean, Pa = l96.ETKF(Y, m, step_t, L)
+Xa, Xa_mean, Pa = l96.ETKF(Y, m, step_t)
+Xa_RMSE = l96.RMSE(Xa_mean, Xt, step_t)
+Pa_trace = l96.Spread(Pa, step_t)
+plot.FuncObTime(t_2year, Xt, Y, Xa_mean, str(len(m))+ "-ETKF")
+plot.AnalysisRMSEandTrace(t_2year[:], Xa_RMSE, Pa_trace, "-ETKF")
+plot.AnalysisErrCovariance(Pa, "-ETKF")
 
 # 5. LETKF
 logger.info('Prosess 5')
+logger.info('--- End ---')

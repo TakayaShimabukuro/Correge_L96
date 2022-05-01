@@ -113,7 +113,7 @@ class Plot_Methods:
             plt.xlabel(x_label)
             plt.ylabel(y_label)
             plt.title(title)
-            plt.savefig(self.path + "AnalysisRMSEandTrace/AnalysisRMSEandTrace-" + name + ".png")
+            plt.savefig(self.path + "AnalysisRMSEandTrace/AnalysisRMSEandTrace" + name + ".png")
             plt.close()
 
     
