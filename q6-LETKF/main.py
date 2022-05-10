@@ -62,10 +62,6 @@ np.random.seed(None)
 # 4. ETKF
 logger.info('Prosess 4')
 Xa, Xa_mean, Pb = l96.ETKF(Y, m, step_t)
-logger.debug("Xa1:\n{}".format(Xa[0:4, 0:3, 0]))
-logger.debug("Xa2:\n{}".format(Xa[0:4, 0:3, 1]))
-logger.debug("Xa3:\n{}".format(Xa[0:4, 0:3, 2]))
-
 Xa_RMSE = l96.RMSE(Xa_mean, Xt, step_t)
 logger.debug("Xa_RMSE:\n{}".format(Xa_RMSE[0:4]))
 Pb_trace = l96.Spread(Pb, step_t)

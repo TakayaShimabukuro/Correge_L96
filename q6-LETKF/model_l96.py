@@ -101,6 +101,7 @@ class Model_L96:
 
             # PARAMETER that is necessary to update.
             Xb_sum = np.zeros(self.N)
+            Xa_sum = np.zeros(self.N)
             dXb = np.zeros((self.N, m_len))
 
             # Background Step
@@ -125,21 +126,22 @@ class Model_L96:
         
             for m in range(m_len):
                 Xa[:, t, m] = Xb_mean + ZbT[:, m]
+                Xa_sum += Xa[:, t, m]
             
-                if t % 10 == 0 and m < 4:
-                    logger.info("--- Debug t=%d, m=%d ---", t, m)
-                    logger.debug("Y:\n{}".format(Y[0:4, t]))
-                    logger.debug("Xb:\n{}".format(Xb[0:4, t, m]))
-                    logger.debug("Xa:\n{}".format(Xa[0:4, t, m]))
-                    logger.debug("Xb_mean:\n{}".format(Xb_mean[0:4]))
-                    #logger.debug("Zb:\n{}".format(Zb[0:4, 0:4]))
-                    #logger.debug("Yb:\n{}".format(Yb[0:4, 0:4]))
+            Xa_mean[:, t] = Xa_sum/m_len
 
-                    #logger.debug("d_ob:\n{}".format(d_ob[0:4]))
-                    #logger.debug("Pa_tilde:\n{}".format(Pa_tilde[0:4, 0:4]))
-                    #logger.debug("T:\n{}".format(T[0:4, 0:4]))
-                    #logger.debug("ZbT:\n{}".format(ZbT.shape))
-                    logger.debug("ZbT:\n{}".format(ZbT[0:4, 0:4]))
-            
+            if t % 20 == 0:
+                logger.info("--- Debug t=%d, m=%d ---", t, m)
+                logger.debug("Y:\n{}".format(Y[0:4, t]))
+                logger.debug("Xb:\n{}".format(Xb[0:4, t, m]))
+                logger.debug("Xa:\n{}".format(Xa[0:4, t, m]))
+                logger.debug("Xb_mean:\n{}".format(Xb_mean[0:4]))
+                #logger.debug("Zb:\n{}".format(Zb[0:4, 0:4]))
+                #logger.debug("Yb:\n{}".format(Yb[0:4, 0:4]))
 
+                #logger.debug("d_ob:\n{}".format(d_ob[0:4]))
+                #logger.debug("Pa_tilde:\n{}".format(Pa_tilde[0:4, 0:4]))
+                #logger.debug("T:\n{}".format(T[0:4, 0:4]))
+                #logger.debug("ZbT:\n{}".format(ZbT.shape))
+                logger.debug("ZbT:\n{}".format(ZbT[0:4, 0:4]))
         return Xa, Xa_mean, Pb
