@@ -18,7 +18,7 @@ mu = 0.0
 sigma = 1.0
 step_2year = 2920
 step_t = 1460  # 4step = 1day
-num = 10 # member の個数
+num = 100 # member の個数
 m = np.arange(20, 20+2*num, 2)
 path = "./q6-LETKF/result/"
 L = np.zeros((N, N))
@@ -61,12 +61,17 @@ np.random.seed(None)
 
 # 4. ETKF
 logger.info('Prosess 4')
-Xa, Xa_mean, Pa = l96.ETKF(Y, m, step_t)
+Xa, Xa_mean, Pb = l96.ETKF(Y, m, step_t)
+logger.debug("Xa1:\n{}".format(Xa[0:4, 0:3, 0]))
+logger.debug("Xa2:\n{}".format(Xa[0:4, 0:3, 1]))
+logger.debug("Xa3:\n{}".format(Xa[0:4, 0:3, 2]))
+
 Xa_RMSE = l96.RMSE(Xa_mean, Xt, step_t)
-Pa_trace = l96.Spread(Pa, step_t)
+logger.debug("Xa_RMSE:\n{}".format(Xa_RMSE[0:4]))
+Pb_trace = l96.Spread(Pb, step_t)
 plot.FuncObTime(t_2year, Xt, Y, Xa_mean, str(len(m))+ "-ETKF")
-plot.AnalysisRMSEandTrace(t_2year[:], Xa_RMSE, Pa_trace, "-ETKF")
-plot.AnalysisErrCovariance(Pa, "-ETKF")
+plot.AnalysisRMSEandTrace(t_2year[:], Xa_RMSE, Pb_trace, "-ETKF")
+plot.AnalysisErrCovariance(Pb, "-ETKF")
 
 # 5. LETKF
 logger.info('Prosess 5')

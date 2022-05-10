@@ -2,6 +2,7 @@ from ctypes.wintypes import HACCEL
 import numpy as np
 from logging import getLogger, DEBUG, basicConfig
 from plot import Plot_Methods
+from scipy import linalg
 logger = getLogger(__name__)
 
 
@@ -86,23 +87,21 @@ class Model_L96:
         Xb = np.zeros(((self.N, step, m_len)))
         Xa = np.zeros(((self.N, step, m_len)))
         Xa_mean = np.zeros((self.N, step))
-        Pa = np.zeros(((self.N, self.N, step)))
+        Pb = np.zeros(((self.N, self.N, step)))
         H = np.identity(self.N)
         R = np.identity(self.N)
         I = np.identity(m_len)
         for m in range(m_len):
             Xb[:, 0, m] = Y[:, m_temp[m]]+(np.random.normal(loc=0.0, scale=1.0, size=self.N))
             Xa[:, 0, m] = Y[:, m_temp[m]]+(np.random.normal(loc=0.0, scale=1.0, size=self.N))
-        Pa[:, :, 0] = np.diag([25]*self.N)
+        Pb[:, :, 0] = np.diag([25]*self.N)
         
         # PROCESS
         for t in range(1, step):
 
             # PARAMETER that is necessary to update.
             Xb_sum = np.zeros(self.N)
-            Xa_sum = np.zeros(self.N)
             dXb = np.zeros((self.N, m_len))
-            dXa = np.zeros((self.N, m_len))
 
             # Background Step
             for m in range(m_len):
@@ -115,36 +114,32 @@ class Model_L96:
                 dXb[:, m] = Xb[:, t, m]-Xb_mean
             Zb = dXb / np.sqrt(m_len-1)
             Yb = H@Zb
-            Pb_tilde = I
+            Pb[:, :, t] = Zb@I@Zb.T
 
             # Analysis Step
-            Pa_tilde = np.linalg.inv(np.linalg.inv(Pb_tilde) + Yb.T@np.linalg.inv(R)@Yb)
-            d_ob = Y[:, t] - H@Xb_mean
+            Pa_tilde = np.linalg.inv(I + Yb.T@np.linalg.inv(R)@Yb)
+            d_ob = (Y[:, t] - H@Xb_mean).dot(1)
             #Pa_tilde = np.linalg.inv(I + Yb.T@R@Yb)
-            T = (Pa_tilde@Yb.T@R@d_ob*1)+(np.sqrt(m-1)*np.sqrt(Pa_tilde))
+            T = Pa_tilde@Yb.T@np.linalg.inv(R)@d_ob+np.sqrt(m-1)*linalg.sqrtm(Pa_tilde)
             ZbT = Zb@T
-
-            '''
-            logger.info("--- Debug1 ---")
-            logger.debug("d_ob.shape:\n{}".format(d_ob.shape))
-            logger.debug("d_ob:\n{}".format(d_ob[0:3]))
-            logger.debug("Pa_tilde.shape:\n{}".format(Pa_tilde.shape))
-            logger.debug("Pa_tilde:\n{}".format(Pa_tilde[0:3, 0:3]))
-            logger.debug("T.shape:\n{}".format(T.shape))
-            logger.debug("T:\n{}".format(T[0:3, 0:3]))
-            logger.debug("ZbT.shape:\n{}".format(ZbT.shape))
-            logger.debug("ZbT:\n{}".format(ZbT[0:3, 0:3]))
-            '''
-
+        
             for m in range(m_len):
-                Xa[:, t, m] = Xb[:, t, m] + ZbT[:, m]
-                Xa_sum += Xa[:, t, m]
+                Xa[:, t, m] = Xb_mean + ZbT[:, m]
             
-            Xa_mean[:, t] = Xa_sum/ m_len
+                if t % 10 == 0 and m < 4:
+                    logger.info("--- Debug t=%d, m=%d ---", t, m)
+                    logger.debug("Y:\n{}".format(Y[0:4, t]))
+                    logger.debug("Xb:\n{}".format(Xb[0:4, t, m]))
+                    logger.debug("Xa:\n{}".format(Xa[0:4, t, m]))
+                    logger.debug("Xb_mean:\n{}".format(Xb_mean[0:4]))
+                    #logger.debug("Zb:\n{}".format(Zb[0:4, 0:4]))
+                    #logger.debug("Yb:\n{}".format(Yb[0:4, 0:4]))
 
-            for m in range(m_len):
-                dXa[:, m] = Xa[:, t, m] - Xa_mean[:, t]
-            Za = dXa/np.sqrt(m_len-1)
-            Pa[:, :, t] = Za@Pa_tilde@Za.T
+                    #logger.debug("d_ob:\n{}".format(d_ob[0:4]))
+                    #logger.debug("Pa_tilde:\n{}".format(Pa_tilde[0:4, 0:4]))
+                    #logger.debug("T:\n{}".format(T[0:4, 0:4]))
+                    #logger.debug("ZbT:\n{}".format(ZbT.shape))
+                    logger.debug("ZbT:\n{}".format(ZbT[0:4, 0:4]))
+            
 
-        return Xa, Xa_mean, Pa
+        return Xa, Xa_mean, Pb

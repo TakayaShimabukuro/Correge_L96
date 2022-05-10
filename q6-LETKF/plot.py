@@ -99,14 +99,14 @@ class Plot_Methods:
         x_end=[364] # day
         x_label = "time(day)"
         y_label = "RMSE"
-        title = "Lecture6-EKF"
+        title = "Lecture6-TEKF"
         self.make_file(self.path+"/AnalysisRMSEandTrace")
 
         for j in range(len(x_step)):
             plt.figure()
             plt.xticks(np.arange(x_start[j], x_end[j], step=x_step[j]))
             plt.plot(t[x_start[j]*4:x_end[j]*4], RMSE[x_start[j]*4:x_end[j]*4], label="Xa_RMSE")
-            plt.plot(t[x_start[j]*4:x_end[j]*4], Trace[x_start[j]*4:x_end[j]*4], label="Pa_Trace")
+            plt.plot(t[x_start[j]*4:x_end[j]*4], Trace[x_start[j]*4:x_end[j]*4], label="Pb_Trace")
             plt.legend()
             plt.grid(color='k', linestyle='dotted', linewidth=0.5)
             plt.xlim(x_start[j],x_end[j]-1)
@@ -148,7 +148,7 @@ class Plot_Methods:
         day = [1, 10, 300]
         x_label = "time(day)"
         y_label = "RMSE"
-        title = "Lecture4-EKF"
+        title = "Lecture6-TEKF"
         self.make_file(self.path+"/AnalysisErrCovariance")
 
         j = 0
@@ -174,7 +174,7 @@ class Plot_Methods:
         self.make_file(self.path+"/TimeMeanRMSE")
         x_label = "sigma"
         y_label = "ave RMSE(Time mean)"
-        title = "Lecture6-EnKF"
+        title = "Lecture6-TEKF"
         plt.figure()
         plt.plot(B_step, Xas_RMSE, marker="o",fillstyle='none', color="b", linestyle="dashed", lw=0.8)
         plt.grid(color='k', linestyle='dotted', linewidth=0.5)
