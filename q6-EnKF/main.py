@@ -19,7 +19,7 @@ sigma = 1.0
 step_2year = 2920
 step_t = 1460  # 4step = 1day
 m = np.arange(20, 20 + 2 *20, 2)
-path = "./q6/result/"
+path = "./q6-EnKF/result/"
 L = np.zeros((N, N))
 L_sigmas = np.arange(1.0, 40.0, 2.0)
 spinup = 400

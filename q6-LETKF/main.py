@@ -13,7 +13,7 @@ from localization import Localization
 N = 40
 F = 8.0
 dt = 0.05
-delta = 10**-5
+delta = 0.05
 mu = 0.0
 sigma = 1.0
 step_2year = 2920
@@ -60,6 +60,7 @@ for i in range(step_t):
 np.random.seed(None)
 
 # 4. ETKF
+
 logger.info('Prosess 4')
 Xa, Xa_mean, Pb = l96.ETKF(Y, m, step_t)
 Xa_RMSE = l96.RMSE(Xa_mean, Xt, step_t)
@@ -69,6 +70,18 @@ plot.FuncObTime(t_2year, Xt, Y, Xa_mean, str(len(m))+ "-ETKF")
 plot.AnalysisRMSEandTrace(t_2year[:], Xa_RMSE, Pb_trace, "-ETKF")
 plot.AnalysisErrCovariance(Pb, "-ETKF")
 
+
 # 5. LETKF
 logger.info('Prosess 5')
+for i in range(len(L_sigmas)):
+    L = local.get_L(L_sigmas[i])
+    plot.Debug(L, "Localization-" + str(L_sigmas[i]))
+    Xa, Xa_mean, Pb  = l96.LETKF(Y, m, step_t, L)
+
+    Xa_RMSE = l96.RMSE(Xa_mean, Xt, step_t)
+    Pb_trace = l96.Spread(Pb, step_t)
+    plot.AnalysisRMSEandTrace(t_2year[:], Xa_RMSE, Pb_trace, "local-" + str(L_sigmas[i]))
+    plot.AnalysisErrCovariance(Pb, "local-" + str(L_sigmas[i]))
+    result.append(np.mean(Xa_RMSE[spinup:]))
+
 logger.info('--- End ---')
