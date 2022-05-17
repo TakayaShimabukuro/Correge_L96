@@ -18,12 +18,12 @@ mu = 0.0
 sigma = 1.0
 step_2year = 2920
 step_t = 1460  # 4step = 1day
-num = 100 # member の個数
+num = 500 # member の個数
 m = np.arange(20, 20+2*num, 2)
 path = "./q6-LETKF/result/"
 L = np.zeros((N, N))
 L_sigmas = np.arange(1.0, 40.0, 2.0)
-spinup = 400
+spinup = 80
 result = []
 
 # DEBUG SETTING
@@ -39,6 +39,7 @@ l96 = Model_L96(N, F, dt, delta, plot)
 
 # 1. This process is conducted to simulate L96 for 2years
 logger.info('--- Start ---')
+logger.info('--- m=%d ---', len(m))
 logger.info('Prosess 1')
 Xt_2year = np.zeros((N, step_2year))
 Xt1_2year = float(F)*np.ones(N)
@@ -60,17 +61,17 @@ for i in range(step_t):
 np.random.seed(None)
 
 # 4. ETKF
-
 logger.info('Prosess 4')
 Xa, Xa_mean, Pb = l96.ETKF(Y, m, step_t)
 Xa_RMSE = l96.RMSE(Xa_mean, Xt, step_t)
-logger.debug("Xa_RMSE:\n{}".format(Xa_RMSE[0:4]))
 Pb_trace = l96.Spread(Pb, step_t)
+
 plot.FuncObTime(t_2year, Xt, Y, Xa_mean, str(len(m))+ "-ETKF")
 plot.AnalysisRMSEandTrace(t_2year[:], Xa_RMSE, Pb_trace, "-ETKF")
 plot.AnalysisErrCovariance(Pb, "-ETKF")
 
-
+logger.debug("Xa_RMSE:\n{}".format(Xa_RMSE[0:4]))# Debug
+"""
 # 5. LETKF
 logger.info('Prosess 5')
 for i in range(len(L_sigmas)):
@@ -83,5 +84,5 @@ for i in range(len(L_sigmas)):
     plot.AnalysisRMSEandTrace(t_2year[:], Xa_RMSE, Pb_trace, "local-" + str(L_sigmas[i]))
     plot.AnalysisErrCovariance(Pb, "local-" + str(L_sigmas[i]))
     result.append(np.mean(Xa_RMSE[spinup:]))
-
+"""
 logger.info('--- End ---')

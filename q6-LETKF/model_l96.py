@@ -45,19 +45,6 @@ class Model_L96:
         k4 = self.l96(X1 + k3) * self.dt
         return X1 + (k1 + 2.0*k2 + 2.0*k3 + k4) / 6.0
 
-    # Mを導出
-    def get_M(self, X):
-        e = np.identity(self.N)
-        M = np.zeros((self.N, self.N))
-
-        np.set_printoptions(threshold=np.inf)
-        for i in range(self.N):
-            a = X + self.delta*e[:, i]
-            b = X
-            M[:, i] = (self.RK4(a)-self.RK4(b)) / self.delta
-
-        return M
-
     # RMSEを取得
     def RMSE(self, X1, X2, step):
         rmse = np.zeros((step))
@@ -73,16 +60,8 @@ class Model_L96:
             tmp.append(np.sqrt(np.trace(P[:, :, t])/len(P[:, :, t])))
         return tmp
 
-    # Spreadを取得
-    def Reshape(self, Y, step):
-        YO = np.zeros(((self.N, self.N, step)))
-        for t in range(step):
-            YO[:, 0, t] = Y[:, t]
-        return YO
-
     # ETKF
     def ETKF(self, Y, m_temp, step):
-
         # PARAMETER
         m_len = len(m_temp)
         Xb = np.zeros(((self.N, step, m_len)))
@@ -92,6 +71,7 @@ class Model_L96:
         H = np.identity(self.N)
         R = np.identity(self.N)
         I = np.identity(m_len)
+        one = np.ones((m_len,m_len))
         for m in range(m_len):
             Xb[:, 0, m] = Y[:, m_temp[m]]+(np.random.normal(loc=0.0, scale=1.0, size=self.N))
             Xa[:, 0, m] = Y[:, m_temp[m]]+(np.random.normal(loc=0.0, scale=1.0, size=self.N))
@@ -100,7 +80,7 @@ class Model_L96:
         # PROCESS
         for t in range(1, step):
 
-            # PARAMETER that is necessary to update.
+            # PARAMETER that is necessary to initialize.
             Xb_sum = np.zeros(self.N)
             Xa_sum = np.zeros(self.N)
             dXb = np.zeros((self.N, m_len))
@@ -121,9 +101,20 @@ class Model_L96:
             Pb[:, :, t] = Zb@I@Zb.T
 
             # Analysis Step
-            Pa_tilde = np.linalg.inv(I + Yb.T@np.linalg.inv(R)@Yb)
+            Pa_tilde_inv = I + Yb.T@R@Yb
+            D, lamda = np.linalg.eigh(Pa_tilde_inv)
+
+
+
+
+
+
+
+
+            Pa_tilde = lamda@np.diag(1/D)@lamda.T
+            Pa_tilde_sqrt = lamda@np.diag(np.sqrt(1/D))@lamda.T
             d_ob = Y[:, t] - H@Xb_mean
-            T = np.dot(Pa_tilde@Yb.T@np.linalg.inv(R)@d_ob, 1)+(np.sqrt(m_len-1)*linalg.sqrtm(Pa_tilde))
+            T = Pa_tilde@Yb.T@R@d_ob@one[0,:]+(np.sqrt(m_len-1)*Pa_tilde_sqrt)
             ZbT = Zb@T
         
             for m in range(m_len):
@@ -132,18 +123,19 @@ class Model_L96:
             
             Xa_mean[:, t] = Xa_sum/m_len
 
-            if t == 10:
+            if t <=4:
                 logger.info("--- Debug t=%d ---", t)
+                logger.debug("one:\n{}".format(one.shape))
+                logger.debug("T:\n{}".format(T.shape))
                 logger.debug("Y:\n{}".format(Y[0:4, t]))
                 logger.debug("Xa_mean:\n{}".format(Xa_mean[0:4, t]))
-                #logger.debug("Zb:\n{}".format(Zb[0:4, 0:4]))
-                #logger.debug("Yb:\n{}".format(Yb[0:4, 0:4]))
+                logger.debug("Zb:\n{}".format(Zb[0:4, 0:4]))
+                logger.debug("Yb:\n{}".format(Yb[0:4, 0:4]))
+                logger.debug("Pa_tilde_inv:\n{}".format(Pa_tilde_inv[0:4, 0:4]))
 
                 #logger.debug("d_ob:\n{}".format(d_ob[0:4]))
-                logger.debug("Pa_tilde:\n{}".format(Pa_tilde[0:4, 0:4]))
-                logger.debug("Pa_tilde sqrt:\n{}".format(linalg.sqrtm(Pa_tilde)[0:4, 0:4]))
-                logger.debug("T:\n{}".format(T[0:4, 0:4]))
-                logger.debug("ZbT:\n{}".format(ZbT[0:4, 0:4]))
+                logger.debug("D:\n{}".format(D[0:4]))
+                logger.debug("lamda:\n{}".format(lamda[0:4, 0:4]))
         return Xa, Xa_mean, Pb
     
     # LETKF

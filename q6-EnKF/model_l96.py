@@ -136,5 +136,11 @@ class Model_L96:
                 Pa_sum += Za@Za.T
 
             Pa[:, :, t] = Pa_sum / m_len
-
+            if t <=4:
+                logger.info("--- Debug t=%d ---", t)
+                logger.debug("Y:\n{}".format(Y[0:4, t]))
+                logger.debug("Xa_mean:\n{}".format(Xa_mean[0:4, t]))
+                logger.debug("Zb:\n{}".format(Zb[0:4, 0:4]))
+                logger.debug("Yb:\n{}".format(Yb[0:4, 0:4]))
+   
         return Xa, Xa_mean, Pa
