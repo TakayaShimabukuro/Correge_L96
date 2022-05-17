@@ -110,7 +110,8 @@ class Model_L96:
             Xb_mean = Xb_sum / m_len
             
             for m in range(m_len):
-                dXb[:, m] = Xb[:, t, m]-Xb_mean
+                dXb[:, m] = (Xb[:, t, m]-Xb_mean) * 1.05
+                #dXb[:, m] = (Xb[:, t, m]-Xb_mean)
             Zb = dXb / np.sqrt(m_len-1)
             Yb = H@Zb
             if FLG_Localization:

@@ -7,7 +7,7 @@ import numpy as np
 from plot import Plot_Methods
 # PARAMETER
 N = 40
-path = "./q6/result/"
+path = "./q6-EnKF/result/"
 L = np.zeros((N, N))
 sigmas = [1, 3, 5]
 

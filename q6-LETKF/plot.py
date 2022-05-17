@@ -74,8 +74,8 @@ class Plot_Methods:
         x_label = "time(day)"
         y_label = "X"
         line_labels = ["Truth", "Observe", "Analysis"]
-        title = "Lecture6-EnKF-PO"
-        self.make_file(self.path+"/EnKF-PO")
+        title = "Lecture6-LETKF"
+        self.make_file(self.path+"/LETKF")
 
 
         for j in range(len(x_step)):
@@ -90,7 +90,7 @@ class Plot_Methods:
             plt.xlabel(x_label)
             plt.ylabel(y_label)
             plt.title(title)
-            plt.savefig(self.path + "EnKF-PO/EnKF-PO-" + name + ".png")
+            plt.savefig(self.path + "LETKF/LETKF" + name + ".png")
             plt.close()
 
     def AnalysisRMSEandTrace(self, t, RMSE, Trace, name):
