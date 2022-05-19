@@ -2,8 +2,6 @@
 from logging import getLogger, DEBUG, basicConfig
 import numpy as np
 import tqdm
-import threading
-import queue
 import time
 
 # INTERNAL LIBRARIES
@@ -41,19 +39,12 @@ plot = Plot_Methods(path)
 local = Localization(N)
 l96 = Model_L96(N, F, dt, delta, plot)
 
-# METHODS
-def process4_multi(i, Xt, Y, q):
-    L = local.get_L(L_sigmas[i])
-    Xa, Xa_mean, Pa  = l96.EnKF_PO(Y, ensambles, ensamble_size, step_t, L)
-    Xa_RMSE = l96.RMSE(Xa_mean, Xt, step_t)
-    Pa_trace = l96.Spread(Pa, step_t)
-    q.put(np.mean(Xa_RMSE[spinup:]))
 
 # PROCESS
 if __name__ == '__main__':
     start = time.time()
     logger.info('--- PROCESS 1 ')
-    logger.info(" N = %d ---", N)
+    logger.info(" N = %d ", N)
     logger.info(" ensamble_size = %d ", ensamble_size)
     logger.info(" spinup = %d ", spinup)
     Xt_2year = np.zeros((N, step_2year))
@@ -74,13 +65,14 @@ if __name__ == '__main__':
 
     logger.info('--- PROCESS 4 ---')
     for i in tqdm.tqdm(range(len(L_sigmas))):
-        print(threading.active_count())
-        globals()[f"q{i}"] = queue.Queue()
-        globals()[f"t{i}"] = threading.Thread(target=process4_multi, args=(i, Xt, Y, globals()[f"q{i}"]))
+        L = local.get_L(L_sigmas[i])
+        Xa, Xa_mean, Pa  = l96.EnKF_PO(Y, ensambles, ensamble_size, step_t, L)
+        Xa_RMSE = l96.RMSE(Xa_mean, Xt, step_t)
+        Pa_trace = l96.Spread(Pa, step_t)
+        Xas_RMSE_mean.append(np.mean(Xa_RMSE[spinup:]))
 
-        globals()[f"t{i}"].start()
-        Xas_RMSE_mean.append(globals()[f"q{i}"].get())
-        logger.debug("--- L_sigma = %d, Xa_RMSE = %f---", L_sigmas[i], Xas_RMSE_mean[i])
+    for i in range(len(L_sigmas)):
+        logger.debug("--- L_sigmas = %d, Xa_RMSE = %f---", L_sigmas[i], Xas_RMSE_mean[i])
 
     logger.info('--- PROCESS 5 ---')
     plot.TimeMeanRMSE(L_sigmas, Xas_RMSE_mean)
