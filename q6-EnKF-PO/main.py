@@ -41,6 +41,10 @@ l96 = Model_L96(N, F, dt, delta, plot)
 
 # PROCESS
 logger.info('--- PROCESS 1 ---')
+logger.info("--- DEBUG ---")
+logger.info("--- N = %d ---", N)
+logger.info("--- ensamble_size = %d ---", ensamble_size)
+logger.info("--- spinup = %d ---", spinup)
 Xt_2year = np.zeros((N, step_2year))
 Xt1_2year = float(F)*np.ones(N)
 Xt1_2year[20] = 1.001*F
@@ -64,14 +68,6 @@ for i in tqdm.tqdm(range(len(L_sigmas))):
     Xa_RMSE = l96.RMSE(Xa_mean, Xt, step_t)
     Pa_trace = l96.Spread(Pa, step_t)
     Xas_RMSE_mean.append(np.mean(Xa_RMSE[spinup:]))
-
-
-# DEBUG
-logger.info("--- DEBUG ---")
-logger.info("--- N = %d ---", N)
-logger.info("--- ensamble_size = %d ---", ensamble_size)
-logger.info("--- spinup = %d ---", spinup)
-for i in range(len(L_sigmas)):
     logger.debug("--- L_sigmas = %d, Xa_RMSE = %d---", L_sigmas[i], Xas_RMSE_mean[i])
 
 logger.info('--- PROCESS 5 ---')
