@@ -28,7 +28,7 @@ L_sigmas = np.arange(1.0, N, 2.0)
 spinup = 80
 Xas_RMSE_mean = []
 
-Ï
+
 # DEBUG SETTING
 logger = getLogger(__name__)
 logger.setLevel(DEBUG)
