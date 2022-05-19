@@ -58,60 +58,58 @@ class Model_L96:
             tmp.append(np.sqrt(np.trace(P[:, :, t])/len(P[:, :, t])))
         return tmp
 
-    def generete_noises_avarage_0(self, ensembles):
+    def generete_noises_avarage_0(self, ensamble_size):
         noise_list = []
-        for index, value in enumerate(ensembles):
-            noise_list.append(np.random.normal(
-                loc=0.0, scale=1.0, size=self.N))
+        for i in range(ensamble_size):
+            noise_list.append(np.random.normal(loc=0.0, scale=1.0, size=self.N))
         return noise_list, np.mean(noise_list)
 
-    def analysis_Xb(self, Xb, Xa, t, ensembles):
-        for index, value in enumerate(ensembles):
-            Xb[:, t, value] = self.RK4(Xa[:, t-1, value])
+    def analysis_Xb(self, Xb, Xa, t, ensamble_size):
+        for i in range(ensamble_size):
+            Xb[:, t, i] = self.RK4(Xa[:, t-1, i])
         return Xb, np.mean(Xb[:, t, :], axis=1)
 
-    def analysis_Xa(self, Xb, Xa, K, Y, t, ensembles):
-        noise_list, noise_ave = self.generete_noises_avarage_0(ensembles)
-        for index, value in enumerate(ensembles):
-            Xa[:, t, value] = Xb[:, t, value] + K@(Y[:, t] + (noise_list[value]-noise_ave) - self.H@Xb[:, t, value])
+    def analysis_Xa(self, Xb, Xa, K, Y, t, ensamble_size):
+        noise_list, noise_ave = self.generete_noises_avarage_0(ensamble_size)
+        for i in range(ensamble_size):
+            Xa[:, t, i] = Xb[:, t, i] + K@(Y[:, t] + (noise_list[i]-noise_ave) - self.H@Xb[:, t, i])
         return Xa, np.mean(Xa[:, t, :], axis=1)
 
-    def calculate_Zb(self, Xb, Xb_mean, t, ensembles, ensamble_size):
+    def calculate_Zb(self, Xb, Xb_mean, t, ensamble_size):
         dXb = np.zeros((self.N, ensamble_size))
-        for index, value in enumerate(ensembles):
-            dXb[:, value] = (Xb[:, t, value]-Xb_mean)
+        for i in range(ensamble_size):
+            dXb[:, i] = (Xb[:, t, i]-Xb_mean)
         return (dXb / np.sqrt(ensamble_size-1)) * (1 + self.delta)
 
-    def calculate_Yb(self, Zb, t, ensembles, ensamble_size):
+    def calculate_Yb(self, Zb, ensamble_size):
         Yb = np.zeros((self.N, ensamble_size))
-        for index, value in enumerate(ensembles):
-            Yb[:, value] = self.H @ Zb[:, value]
+        for i in range(ensamble_size):
+            Yb[:, i] = self.H @ Zb[:, i]
         return Yb
 
     # PO法によるEnKF
-    def EnKF_PO(self, Y, ensembles, ensamble_size, step, L):
+    def EnKF_PO(self, Y, ensamble_size, step, L):
 
         # PARAMETER
         Xb = np.zeros(((self.N, step, ensamble_size)))
         Xa = np.zeros(((self.N, step, ensamble_size)))
         Xb_mean = np.zeros((self.N, step))
         Xa_mean = np.zeros((self.N, step))
-        P_DEBUG = np.zeros(((self.N, self.N, step)))
+        Pb = np.zeros(((self.N, self.N, step)))
 
         # t = 0
-        P_DEBUG[:, :, 0] = np.diag([25]*self.N)
-        for index, value in enumerate(ensembles):
-            Xb[:, 0, value] = Y[:, value]+np.random.normal(loc=0.0, scale=1.0, size=self.N)
-            Xa[:, 0, value] = Y[:, value]+np.random.normal(loc=0.0, scale=1.0, size=self.N)
+        Pb[:, :, 0] = np.diag([25]*self.N)
+        for i in range(ensamble_size):
+            Xb[:, 0, i] = Y[:, i]+np.random.normal(loc=0.0, scale=1.0, size=self.N)
+            Xa[:, 0, i] = Y[:, i]+np.random.normal(loc=0.0, scale=1.0, size=self.N)
 
         # t > 0
         for t in range(1, step):
-            Xb, Xb_mean[:, t] = self.analysis_Xb(Xb, Xa, t, ensembles)
-            Zb = self.calculate_Zb(Xb, Xb_mean[:, t], t, ensembles, ensamble_size)
-            Yb = self.calculate_Yb(Zb, t, ensembles, ensamble_size)
+            Xb, Xb_mean[:, t] = self.analysis_Xb(Xb, Xa, t, ensamble_size)
+            Zb = self.calculate_Zb(Xb, Xb_mean[:, t], t, ensamble_size)
+            Yb = self.calculate_Yb(Zb, ensamble_size)
             K = L * (Zb@Yb.T@np.linalg.inv((self.H@L)*(Yb@Yb.T) + self.R))
-            Xa, Xa_mean[:, t] = self.analysis_Xa(Xb, Xa, K, Y, t, ensembles)
-
-            P_DEBUG[:, :, t] = Zb@Zb.T
+            Xa, Xa_mean[:, t] = self.analysis_Xa(Xb, Xa, K, Y, t, ensamble_size)
+            Pb[:, :, t] = Zb@Zb.T
         
-        return Xa, Xa_mean, P_DEBUG
+        return Xa, Xa_mean, Pb

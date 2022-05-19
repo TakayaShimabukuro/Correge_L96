@@ -14,18 +14,18 @@ from localization import Localization
 N = 40
 F = 8.0
 dt = 0.05
-delta = 0.1
-mu = 0.0
-sigma = 1.0
+infration = 0.05
 step_2year = 2920
 step_t = 1460  # 4step = 1day
 ensamble_size = 40
-ensambles = np.arange(0, ensamble_size, 1)
 path = "./q6-EnKF-PO/result/"
-L_sigmas = np.arange(1.0, N, 2.0)
+L_sigmas = np.arange(1.0, 16, 2.0)
 spinup = 80
 Xas_RMSE_mean = []
-
+Xt_2year = np.zeros((N, step_2year))
+Xt1_2year = float(F)*np.ones(N)
+Xt = np.zeros((N, step_t))
+Y = np.zeros((N, step_t))
 
 # DEBUG SETTING
 logger = getLogger(__name__)
@@ -37,44 +37,43 @@ np.set_printoptions(threshold=np.inf, suppress=True)
 # INSTANCE
 plot = Plot_Methods(path)
 local = Localization(N)
-l96 = Model_L96(N, F, dt, delta, plot)
+l96 = Model_L96(N, F, dt, infration, plot)
 
 
 # PROCESS
 if __name__ == '__main__':
+    logger.info('--- PARAMETER ---')
+    logger.debug(" N : %d ", N)
+    logger.debug(" ensamble_size : %d ", ensamble_size)
+    logger.debug(f' infration: {infration:.0%}')
+    logger.debug(" spinup : %d day", (spinup/4))
+    logger.info('--- DEBUG ---')
+
+    #Process 1
     start = time.time()
-    logger.info('--- PROCESS 1 ')
-    logger.info(" N = %d ", N)
-    logger.info(" ensamble_size = %d ", ensamble_size)
-    logger.info(" spinup = %d ", spinup)
-    Xt_2year = np.zeros((N, step_2year))
-    Xt1_2year = float(F)*np.ones(N)
     Xt1_2year[20] = 1.001*F
     Xt_2year, t_2year = l96.analyze_model(Xt_2year, Xt1_2year, step_2year)
 
-    logger.info('--- PROCESS 2 ---')
-    Xt = np.zeros((N, step_t))
+    #Process 2
     Xt = Xt_2year[:, step_t:step_2year]
-
-    logger.info('--- PROCESS 3 ---')
-    Y = np.zeros((N, step_t))
+    
+    #Process 3
     np.random.seed(0)
     for i in range(step_t):
-        Y[:, i] = Xt[:, i] + np.random.normal(loc=mu, scale=sigma, size=N)
+        Y[:, i] = Xt[:, i] + np.random.normal(loc=0.0, scale=1.0, size=N)
     np.random.seed(None)
 
-    logger.info('--- PROCESS 4 ---')
+    #Process 4
     for i in tqdm.tqdm(range(len(L_sigmas))):
         L = local.get_L(L_sigmas[i])
-        Xa, Xa_mean, Pa  = l96.EnKF_PO(Y, ensambles, ensamble_size, step_t, L)
+        Xa, Xa_mean, Pb  = l96.EnKF_PO(Y, ensamble_size, step_t, L)
         Xa_RMSE = l96.RMSE(Xa_mean, Xt, step_t)
-        Pa_trace = l96.Spread(Pa, step_t)
         Xas_RMSE_mean.append(np.mean(Xa_RMSE[spinup:]))
+        logger.debug(" L_sigmas = %d, Xa_RMSE = %f", L_sigmas[i], Xas_RMSE_mean[i])
 
-    for i in range(len(L_sigmas)):
-        logger.debug("--- L_sigmas = %d, Xa_RMSE = %f---", L_sigmas[i], Xas_RMSE_mean[i])
+        #Pa_trace = l96.Spread(Pb, step_t)
 
-    logger.info('--- PROCESS 5 ---')
+    #Process 5
     plot.TimeMeanRMSE(L_sigmas, Xas_RMSE_mean)
     elapsed_time = time.time() - start
     print ("elapsed_time:{0}".format(elapsed_time) + "[sec]")
