@@ -1,8 +1,7 @@
 from ctypes.wintypes import HACCEL
 import numpy as np
 from logging import getLogger, DEBUG, basicConfig
-from plot import Plot_Methods
-from scipy import linalg
+import tqdm
 logger = getLogger(__name__)
 
 
@@ -16,7 +15,6 @@ class Model_L96:
         self.delta = delta
         self.H = np.identity(self.N)
         self.R = np.identity(self.N)
-
 
     # METHOD
     def analyze_model(self, Xn, X1_tmp, step):    # X1[40, 1]を初期値とするstep分のシミュレーションを行う。
@@ -67,14 +65,14 @@ class Model_L96:
     def analysis_Xa(self, Xb_mean, Xa, ZbT, t, ensamble_size):
         xb_mean_ens = (np.ones((ensamble_size, 1)) @ Xb_mean.reshape(1, -1)).T
         for i in range(ensamble_size):
-            Xa[:, t, ] = (Xb_mean + ZbT)[:, i]
+            Xa[:, t, i] = (xb_mean_ens + ZbT)[:, i]
         return Xa, np.mean(Xa[:, t, :], axis=1)
 
     def calculate_Zb(self, Xb, Xb_mean, t, ensamble_size):
         dXb = np.zeros((self.N, ensamble_size))
         for i in range(ensamble_size):
             dXb[:, i] = (Xb[:, t, i]-Xb_mean)
-        return (dXb / np.sqrt(ensamble_size-1)) * (1 + self.delta)
+        return dXb / np.sqrt(ensamble_size-1)
 
     def calculate_Yb(self, Zb, ensamble_size):
         Yb = np.zeros((self.N, ensamble_size))
@@ -82,9 +80,8 @@ class Model_L96:
             Yb[:, i] = self.H @ Zb[:, i]
         return Yb
         
-    def calculate_Pa_tilda(self, Yb, ensamble_size, L):
-        I = np.identity(ensamble_size)
-        R_loc_inv = np.diag(np.ones(self.N) * L)
+    def calculate_Pa_tilda(self, Yb, L, I):
+        R_loc_inv = np.linalg.inv(self.R * L)
         Pa_tilde_inv = I + Yb.T @ R_loc_inv @ Yb
         D, lamda = np.linalg.eigh(Pa_tilde_inv)
         return lamda@np.diag(1/D)@lamda.T, lamda@np.diag(np.sqrt(1/D))@lamda.T, R_loc_inv
@@ -99,6 +96,7 @@ class Model_L96:
         Xa_mean = np.zeros((self.N, step))
         Pb = np.zeros(((self.N, self.N, step)))
         one = np.ones((1, ensamble_size))
+        I = np.identity(ensamble_size)
         
         # t = 0
         Pb[:, :, 0] = np.diag([25]*self.N)
@@ -107,17 +105,29 @@ class Model_L96:
             Xa[:, 0, i] = Y[:, i]+np.random.normal(loc=0.0, scale=1.0, size=self.N)
 
         # t > 0
-        for t in range(1, step):
+        for t in tqdm.tqdm(range(1, step), leave=False):
             Xb, Xb_mean[:, t] = self.analysis_Xb(Xb, Xa, t, ensamble_size)
-            Zb = self.calculate_Zb(Xb, Xb_mean[:, t], t, ensamble_size)
-            Yb = self.calculate_Yb(Zb, ensamble_size)
+            Zb = self.calculate_Zb(Xb.copy(), Xb_mean[:, t], t, ensamble_size) * (1.0 + self.delta)
+            Yb = self.calculate_Yb(Zb.copy(), ensamble_size)
 
-            Pa_tilde, Pa_tilde_sqrt, R_loc_inv = self.calculate_Pa_tilda(Yb, ensamble_size, L)
+            Pa_tilde, Pa_tilde_sqrt, R_loc_inv = self.calculate_Pa_tilda(Yb, L, I)
             d_ob = Y[:, t] - self.H@Xb_mean[:, t]
             T = (Pa_tilde@Yb.T@R_loc_inv@d_ob).reshape(-1, 1) @ one + \
                 (np.sqrt(ensamble_size - 1) * Pa_tilde_sqrt)
             Xa, Xa_mean[:, t] = self.analysis_Xa(Xb_mean[:, t], Xa, Zb@T, t, ensamble_size)
             
-            Pb[:, :, t] = Zb@Zb.T
+            Pb[:, :, t] = Zb@I@Zb.T
+            '''
+            if t < 4:
+                logger.debug("Xb:\n{}".format(Xb[0:3, t, 0]))
+                logger.debug("Xb_mean:\n{}".format(Xb_mean[0:3, 0:3]))
+                logger.debug("Pa_tilde:\n{}".format(Pa_tilde[0:3, 0:3]))
+                logger.debug("Pa_tilde_sqrt:\n{}".format(Pa_tilde_sqrt[0:3, 0:3]))
+                logger.debug("d_ob:\n{}".format(d_ob[0:3]))
+                logger.debug("T:\n{}".format(T[0:3]))
+                logger.debug("Xa:\n{}".format(Xa[0:3, t, 0]))
+                logger.debug("Xa_mean:\n{}".format(Xa_mean[0:3, 0:3]))
+                logger.debug("Pb:\n{}".format(Pb[0:3, 0:3, t]))
+            '''
         
         return Xa, Xa_mean, Pb

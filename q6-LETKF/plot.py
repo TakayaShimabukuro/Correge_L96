@@ -38,7 +38,19 @@ class Plot_Methods:
             os.mkdir(path)
         except FileExistsError:
             pass        
-    
+    def TimeMeanRMSEEnsembles(self, L, ensamble_size, Xas_RMSE):
+        self.make_file(self.path+"/TimeMeanRMSEEnsembles")
+        plt.figure()
+        for k in range(len(ensamble_size)):
+            plt.plot(L, Xas_RMSE[k], marker="o",fillstyle='none', linestyle="dashed", lw=0.8, label="ensamble_size:" + str(k))
+        plt.grid(color='k', linestyle='dotted', linewidth=0.5)
+        plt.xlabel("sigma")
+        plt.ylabel("RMSE")
+        plt.legend()
+        plt.title(self.title)
+        plt.savefig(self.path + "TimeMeanRMSEEnsembles/TimeMeanRMSEEnsembles.png")
+        plt.close()
+
     def TimeMeanRMSE(self, B_step, Xas_RMSE):
         self.make_file(self.path+"/TimeMeanRMSE")
         plt.figure()

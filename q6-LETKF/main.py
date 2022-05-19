@@ -1,6 +1,7 @@
 # EXTERNAL LIBRARIES
 from logging import getLogger, DEBUG, basicConfig
 import numpy as np
+from sympy import false
 import tqdm
 import time
 
@@ -14,13 +15,13 @@ from localization import Localization
 N = 40
 F = 8.0
 dt = 0.05
-infration = 0.1
+infration = 0.03
 step_2year = 2920
 step_t = 1460  # 4step = 1day
-ensamble_size = 5
-path = "./q6-EnKF-PO/result/"
+ensamble_size = 20
+path = "./q6-LETKF/result/"
 title = "Lecture6-LETKF"
-L_sigmas = np.arange(1.0, 10, 2.0)
+L_sigmas = np.arange(1.0, 16, 2.0)
 spinup = 80
 Xas_RMSE_mean = []
 Xt_2year = np.zeros((N, step_2year))
@@ -60,12 +61,12 @@ if __name__ == '__main__':
     
     #Process 3
     np.random.seed(0)
-    for i in range(step_t):
+    for i in tqdm.tqdm(range(step_t), leave=False):
         Y[:, i] = Xt[:, i] + np.random.normal(loc=0.0, scale=1.0, size=N)
     np.random.seed(None)
 
     #Process 4
-    for i in tqdm.tqdm(range(len(L_sigmas))):
+    for i in tqdm.tqdm(range(len(L_sigmas)), leave=False):
         L = local.get_L(L_sigmas[i])
         Xa, Xa_mean, Pb  = l96.LETKF(Y, ensamble_size, step_t, L)
         Xa_RMSE = l96.RMSE(Xa_mean, Xt, step_t)
@@ -73,7 +74,7 @@ if __name__ == '__main__':
         logger.debug(" L_sigmas = %d, Xa_RMSE = %f", L_sigmas[i], Xas_RMSE_mean[i])
 
         Pb_trace = l96.Spread(Pb, step_t)
-        #plot.AnalysisRMSEandTrace(t_2year[:], Xa_RMSE, Pb_trace, str(L_sigmas[i]))
+        plot.AnalysisRMSEandTrace(t_2year[:], Xa_RMSE, Pb_trace, str(L_sigmas[i]))
 
     #Process 5
     plot.TimeMeanRMSE(L_sigmas, Xas_RMSE_mean)
