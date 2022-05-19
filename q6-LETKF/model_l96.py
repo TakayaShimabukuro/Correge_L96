@@ -113,6 +113,8 @@ class Model_L96:
 
             Pa_tilde = lamda@np.diag(1/D)@lamda.T
             Pa_tilde_sqrt = lamda@np.diag(np.sqrt(1/D))@lamda.T
+
+            
             d_ob = Y[:, t] - H@Xb_mean
             T = Pa_tilde@Yb.T@R@d_ob@one[0,:]+(np.sqrt(m_len-1)*Pa_tilde_sqrt)
             ZbT = Zb@T

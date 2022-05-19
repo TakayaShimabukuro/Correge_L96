@@ -79,6 +79,12 @@ class Model_L96:
         for t in range(step):
             YO[:, 0, t] = Y[:, t]
         return YO
+    
+    def generete_noises_avarage_0(self, m_len):
+        noise_list = []
+        for m in range(m_len):
+            noise_list.append(np.random.normal(loc=0.0, scale=1.0, size=self.N))
+        return noise_list, np.mean(noise_list)
 
     # PO法によるEnKF
     def EnKF_PO(self, Y, m_temp, step, FLG_Localization, L):
@@ -89,10 +95,11 @@ class Model_L96:
         Pa = np.zeros(((self.N, self.N, step)))
         H = np.identity(self.N)
         R = np.identity(self.N)
+        noise_list, noise_ave = self.generete_noises_avarage_0(m_len)
         # t = 0
         for m in range(m_len):
-            Xb[:, 0, m] = Y[:, m_temp[m]]+(np.random.normal(loc=0.0, scale=1.0, size=self.N))
-            Xa[:, 0, m] = Y[:, m_temp[m]]+(np.random.normal(loc=0.0, scale=1.0, size=self.N))
+            Xb[:, 0, m] = Y[:, m_temp[m]]+(noise_list[m]-noise_ave)
+            Xa[:, 0, m] = Y[:, m_temp[m]]+(noise_list[m]-noise_ave)
         Pa[:, :, 0] = np.diag([25]*self.N)
         
         # t > 0
@@ -102,28 +109,33 @@ class Model_L96:
             Pa_sum = np.zeros((self.N, self.N))  
             dXb = np.zeros((self.N, m_len))
             dXa = np.zeros((self.N, m_len))
+            Yb = np.zeros((self.N, m_len))
 
             for m in range(m_len):
                 Xb[:, t, m] = self.RK4(Xa[:, t-1, m])
                 Xb_sum += Xb[:, t, m]
             
             Xb_mean = Xb_sum / m_len
-            
+           
             for m in range(m_len):
-                dXb[:, m] = (Xb[:, t, m]-Xb_mean) * 1.05
+                dXb[:, m] = (Xb[:, t, m]-Xb_mean)
                 #dXb[:, m] = (Xb[:, t, m]-Xb_mean)
             Zb = dXb / np.sqrt(m_len-1)
-            Yb = H@Zb
+            Zb *= 1.1
+            for m in range(m_len):
+                Yb[:, m] = H @ Zb[:, m]
+
             if FLG_Localization:
-                K = Zb@Yb.T@np.linalg.inv(Yb@Yb.T + R)
+                K = Zb@Yb.T@np.linalg.inv((H@L)*(Yb@Yb.T) + R)
+                #K = Zb@Yb.T@np.linalg.inv((Yb@Yb.T) + R)
                 K *= L
             else:
                 K = Zb@Yb.T@np.linalg.inv(Yb@Yb.T + R)
             #self.plot.Debug(Zb@Yb.T, "Pb-" + str(t))
             #self.plot.Debug(K, "K-"+ str(t))
-            
+            noise_list, noise_ave = self.generete_noises_avarage_0(m_len)
             for m in range(m_len):  
-                Xa[:, t, m] = Xb[:, t, m] + K@(Y[:, t]+np.random.normal(loc=0.0, scale=1.0, size=self.N)-H@Xb[:, t, m])
+                Xa[:, t, m] = Xb[:, t, m] + K@(Y[:, t] + (noise_list[m]-noise_ave) -H@Xb[:, t, m])
                 Xa_sum += Xa[:, t, m]
                 
             Xa_mean[:, t] = Xa_sum/ m_len
@@ -135,12 +147,6 @@ class Model_L96:
                 Za = dXa/np.sqrt(m_len-1)
                 Pa_sum += Za@Za.T
 
-            Pa[:, :, t] = Pa_sum / m_len
-            if t <=4:
-                logger.info("--- Debug t=%d ---", t)
-                logger.debug("Y:\n{}".format(Y[0:4, t]))
-                logger.debug("Xa_mean:\n{}".format(Xa_mean[0:4, t]))
-                logger.debug("Zb:\n{}".format(Zb[0:4, 0:4]))
-                logger.debug("Yb:\n{}".format(Yb[0:4, 0:4]))
+            Pa[:, :, t] = np.mean(Pa_sum)
    
         return Xa, Xa_mean, Pa

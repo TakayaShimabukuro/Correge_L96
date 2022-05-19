@@ -73,18 +73,15 @@ plot.AnalysisErrCovariance(Pa, "-all")
 
 
 '''
+logger.info('Prosess 6')
 for i in range(len(L_sigmas)):
-    # 6. This process is conducted to analyze using EnKF and plot thier data.
-    logger.info('Prosess 6')
-    print(i)
+    print("--- L_sibmas : %d---", L_sigmas[i])
     L = local.get_L(L_sigmas[i])
     #plot.Debug(L, "Localization-" + str(L_sigmas[i]))
     Xa, Xa_mean, Pa  = l96.EnKF_PO(Y, m, step_t, True, L)
-    # 7. This process is conducted to locally analyze using EnKF and plot thier data.
-    logger.info('Prosess 7')
     Xa_RMSE = l96.RMSE(Xa_mean, Xt, step_t)
     Pa_trace = l96.Spread(Pa, step_t)
-    plot.AnalysisRMSEandTrace(t_2year[:], Xa_RMSE, Pa_trace, "local-" + str(L_sigmas[i]))
+    #plot.AnalysisRMSEandTrace(t_2year[:], Xa_RMSE, Pa_trace, "local-" + str(L_sigmas[i]))
     #plot.AnalysisErrCovariance(Pa, "local-" + str(L_sigmas[i]))
     result.append(np.mean(Xa_RMSE[spinup:]))
 
