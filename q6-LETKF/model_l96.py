@@ -7,16 +7,19 @@ logger = getLogger(__name__)
 
 
 class Model_L96:
-    # 初期値
+    #PARAMETER
     def __init__(self, N, F, dt, delta, plot):
         self.N = N
         self.F = F
         self.dt = dt
         self.plot = plot
         self.delta = delta
+        self.H = np.identity(self.N)
+        self.R = np.identity(self.N)
 
-    # X1[40, 1]を初期値とするstep分のシミュレーションを行う。
-    def analyze_model(self, Xn, X1_tmp, step):
+
+    # METHOD
+    def analyze_model(self, Xn, X1_tmp, step):    # X1[40, 1]を初期値とするstep分のシミュレーションを行う。
         t = np.zeros(step)
         X1 = np.zeros(self.N)
         X1[:] = X1_tmp[:]
@@ -28,7 +31,6 @@ class Model_L96:
             t[j] = self.dt*j*5
         return Xn, t
 
-    # Lorenz 96
     def l96(self, x):
         f = np.zeros_like(x)
         f[0] = (x[1]-x[self.N-2])*x[self.N-1]-x[0]+self.F
@@ -37,7 +39,6 @@ class Model_L96:
             f[i] = (x[i+1]-x[i-2])*x[i-1]-x[i]+self.F
         return f
 
-    # ルンゲクッタ4次
     def RK4(self, X1):
         k1 = self.l96(X1) * self.dt
         k2 = self.l96(X1 + k1*0.5) * self.dt
@@ -45,7 +46,6 @@ class Model_L96:
         k4 = self.l96(X1 + k3) * self.dt
         return X1 + (k1 + 2.0*k2 + 2.0*k3 + k4) / 6.0
 
-    # RMSEを取得
     def RMSE(self, X1, X2, step):
         rmse = np.zeros((step))
         for t in range(step):
@@ -53,149 +53,71 @@ class Model_L96:
             rmse[t] = np.sqrt(np.mean(sub**2))
         return rmse
 
-    # Spreadを取得
     def Spread(self, P, step):
         tmp = []
         for t in range(step):
             tmp.append(np.sqrt(np.trace(P[:, :, t])/len(P[:, :, t])))
         return tmp
 
-    # ETKF
-    def ETKF(self, Y, m_temp, step):
-        # PARAMETER
-        m_len = len(m_temp)
-        Xb = np.zeros(((self.N, step, m_len)))
-        Xa = np.zeros(((self.N, step, m_len)))
-        Xa_mean = np.zeros((self.N, step))
-        Pb = np.zeros(((self.N, self.N, step)))
-        H = np.identity(self.N)
-        R = np.identity(self.N)
-        I = np.identity(m_len)
-        one = np.ones((m_len,m_len))
-        for m in range(m_len):
-            Xb[:, 0, m] = Y[:, m_temp[m]]+(np.random.normal(loc=0.0, scale=1.0, size=self.N))
-            Xa[:, 0, m] = Y[:, m_temp[m]]+(np.random.normal(loc=0.0, scale=1.0, size=self.N))
-        Pb[:, :, 0] = np.diag([25]*self.N)
+    def analysis_Xb(self, Xb, Xa, t, ensamble_size):
+        for i in range(ensamble_size):
+            Xb[:, t, i] = self.RK4(Xa[:, t-1, i])
+        return Xb, np.mean(Xb[:, t, :], axis=1)
+
+    def analysis_Xa(self, Xb_mean, Xa, ZbT, t, ensamble_size):
+        xb_mean_ens = (np.ones((ensamble_size, 1)) @ Xb_mean.reshape(1, -1)).T
+        for i in range(ensamble_size):
+            Xa[:, t, ] = (Xb_mean + ZbT)[:, i]
+        return Xa, np.mean(Xa[:, t, :], axis=1)
+
+    def calculate_Zb(self, Xb, Xb_mean, t, ensamble_size):
+        dXb = np.zeros((self.N, ensamble_size))
+        for i in range(ensamble_size):
+            dXb[:, i] = (Xb[:, t, i]-Xb_mean)
+        return (dXb / np.sqrt(ensamble_size-1)) * (1 + self.delta)
+
+    def calculate_Yb(self, Zb, ensamble_size):
+        Yb = np.zeros((self.N, ensamble_size))
+        for i in range(ensamble_size):
+            Yb[:, i] = self.H @ Zb[:, i]
+        return Yb
         
-        # PROCESS
-        for t in range(1, step):
+    def calculate_Pa_tilda(self, Yb, ensamble_size, L):
+        I = np.identity(ensamble_size)
+        R_loc_inv = np.diag(np.ones(self.N) * L)
+        Pa_tilde_inv = I + Yb.T @ R_loc_inv @ Yb
+        D, lamda = np.linalg.eigh(Pa_tilde_inv)
+        return lamda@np.diag(1/D)@lamda.T, lamda@np.diag(np.sqrt(1/D))@lamda.T, R_loc_inv
 
-            # PARAMETER that is necessary to initialize.
-            Xb_sum = np.zeros(self.N)
-            Xa_sum = np.zeros(self.N)
-            dXb = np.zeros((self.N, m_len))
-
-            # Background Step
-            for m in range(m_len):
-                Xb[:, t, m] = self.RK4(Xa[:, t-1, m])
-                Xb_sum += Xb[:, t, m]
-            
-            Xb_mean = Xb_sum / m_len
-            
-            for m in range(m_len):
-                dXb[:, m] = Xb[:, t, m]-Xb_mean
-            
-            dXb *= (1 + self.delta)
-            Zb = dXb / np.sqrt(m_len-1)
-            Yb = H@Zb
-            Pb[:, :, t] = Zb@I@Zb.T
-
-            # Analysis Step
-            Pa_tilde_inv = I + Yb.T@R@Yb
-            D, lamda = np.linalg.eigh(Pa_tilde_inv)
-
-
-
-
-
-
-
-
-            Pa_tilde = lamda@np.diag(1/D)@lamda.T
-            Pa_tilde_sqrt = lamda@np.diag(np.sqrt(1/D))@lamda.T
-
-            
-            d_ob = Y[:, t] - H@Xb_mean
-            T = Pa_tilde@Yb.T@R@d_ob@one[0,:]+(np.sqrt(m_len-1)*Pa_tilde_sqrt)
-            ZbT = Zb@T
-        
-            for m in range(m_len):
-                Xa[:, t, m] = Xb_mean + ZbT[:, m]
-                Xa_sum += Xa[:, t, m]
-            
-            Xa_mean[:, t] = Xa_sum/m_len
-
-            if t <=4:
-                logger.info("--- Debug t=%d ---", t)
-                logger.debug("one:\n{}".format(one.shape))
-                logger.debug("T:\n{}".format(T.shape))
-                logger.debug("Y:\n{}".format(Y[0:4, t]))
-                logger.debug("Xa_mean:\n{}".format(Xa_mean[0:4, t]))
-                logger.debug("Zb:\n{}".format(Zb[0:4, 0:4]))
-                logger.debug("Yb:\n{}".format(Yb[0:4, 0:4]))
-                logger.debug("Pa_tilde_inv:\n{}".format(Pa_tilde_inv[0:4, 0:4]))
-
-                #logger.debug("d_ob:\n{}".format(d_ob[0:4]))
-                logger.debug("D:\n{}".format(D[0:4]))
-                logger.debug("lamda:\n{}".format(lamda[0:4, 0:4]))
-        return Xa, Xa_mean, Pb
-    
     # LETKF
-    def LETKF(self, Y, m_temp, step, L):
+    def LETKF(self, Y, ensamble_size, step, L):
 
         # PARAMETER
-        m_len = len(m_temp)
-        Xb = np.zeros(((self.N, step, m_len)))
-        Xa = np.zeros(((self.N, step, m_len)))
+        Xb = np.zeros(((self.N, step, ensamble_size)))
+        Xa = np.zeros(((self.N, step, ensamble_size)))
+        Xb_mean = np.zeros((self.N, step))
         Xa_mean = np.zeros((self.N, step))
         Pb = np.zeros(((self.N, self.N, step)))
-        H = np.identity(self.N)
-        R = np.identity(self.N)
-        RL = np.identity(self.N)@np.linalg.inv(L)
-        I = np.identity(m_len)
-        for m in range(m_len):
-            Xb[:, 0, m] = Y[:, m_temp[m]]+(np.random.normal(loc=0.0, scale=1.0, size=self.N))
-            Xa[:, 0, m] = Y[:, m_temp[m]]+(np.random.normal(loc=0.0, scale=1.0, size=self.N))
+        one = np.ones((1, ensamble_size))
+        
+        # t = 0
         Pb[:, :, 0] = np.diag([25]*self.N)
-        
-        # PROCESS
+        for i in range(ensamble_size):
+            Xb[:, 0, i] = Y[:, i]+np.random.normal(loc=0.0, scale=1.0, size=self.N)
+            Xa[:, 0, i] = Y[:, i]+np.random.normal(loc=0.0, scale=1.0, size=self.N)
+
+        # t > 0
         for t in range(1, step):
+            Xb, Xb_mean[:, t] = self.analysis_Xb(Xb, Xa, t, ensamble_size)
+            Zb = self.calculate_Zb(Xb, Xb_mean[:, t], t, ensamble_size)
+            Yb = self.calculate_Yb(Zb, ensamble_size)
 
-            # PARAMETER that is necessary to update.
-            Xb_sum = np.zeros(self.N)
-            Xa_sum = np.zeros(self.N)
-            dXb = np.zeros((self.N, m_len))
-
-            # Background Step
-            for m in range(m_len):
-                Xb[:, t, m] = self.RK4(Xa[:, t-1, m])
-                Xb_sum += Xb[:, t, m]
+            Pa_tilde, Pa_tilde_sqrt, R_loc_inv = self.calculate_Pa_tilda(Yb, ensamble_size, L)
+            d_ob = Y[:, t] - self.H@Xb_mean[:, t]
+            T = (Pa_tilde@Yb.T@R_loc_inv@d_ob).reshape(-1, 1) @ one + \
+                (np.sqrt(ensamble_size - 1) * Pa_tilde_sqrt)
+            Xa, Xa_mean[:, t] = self.analysis_Xa(Xb_mean[:, t], Xa, Zb@T, t, ensamble_size)
             
-            Xb_mean = Xb_sum / m_len
-            
-            for m in range(m_len):
-                dXb[:, m] = Xb[:, t, m]-Xb_mean
-            
-            dXb *= (1 + self.delta)
-            Zb = dXb / np.sqrt(m_len-1)
-            Yb = H@Zb
-            Pb[:, :, t] = Zb@I@Zb.T
-
-            # Analysis Step
-            Pa_tilde = np.linalg.inv(I + Yb.T@np.linalg.inv(RL)@Yb)
-            if t < 4:
-                logger.info("--- Debug local t=%d ---", t)
-                logger.debug("Pa_tilde:\n{}".format(np.linalg.inv(I + Yb.T@np.linalg.inv(R)@Yb)[0:4, 0:4]))
-                logger.debug("Pa_tilde_localization:\n{}".format(Pa_tilde[0:4, 0:4]))
-
-            d_ob = Y[:, t] - H@Xb_mean
-            T = Pa_tilde@Yb.T@np.linalg.inv(RL)@np.dot(d_ob, 1)+np.sqrt(m_len-1)*linalg.sqrtm(Pa_tilde)
-            ZbT = Zb@T
+            Pb[:, :, t] = Zb@Zb.T
         
-            for m in range(m_len):
-                Xa[:, t, m] = Xb_mean + ZbT[:, m]
-                Xa_sum += Xa[:, t, m]
-            
-            Xa_mean[:, t] = Xa_sum/m_len
-            
         return Xa, Xa_mean, Pb

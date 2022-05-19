@@ -1,9 +1,10 @@
-# External Libraries
+# EXTERNAL LIBRARIES
 from logging import getLogger, DEBUG, basicConfig
-from matplotlib.pyplot import step
 import numpy as np
+import tqdm
+import time
 
-# Internal Libraries
+# INTERNAL LIBRARIES
 from plot import Plot_Methods
 from model_l96 import Model_L96
 from localization import Localization
@@ -13,18 +14,19 @@ from localization import Localization
 N = 40
 F = 8.0
 dt = 0.05
-delta = 0.05
-mu = 0.0
-sigma = 1.0
+infration = 0.1
 step_2year = 2920
 step_t = 1460  # 4step = 1day
-num = 500 # member の個数
-m = np.arange(20, 20+2*num, 2)
-path = "./q6-LETKF/result/"
-L = np.zeros((N, N))
-L_sigmas = np.arange(1.0, 40.0, 2.0)
+ensamble_size = 5
+path = "./q6-EnKF-PO/result/"
+title = "Lecture6-LETKF"
+L_sigmas = np.arange(1.0, 10, 2.0)
 spinup = 80
-result = []
+Xas_RMSE_mean = []
+Xt_2year = np.zeros((N, step_2year))
+Xt1_2year = float(F)*np.ones(N)
+Xt = np.zeros((N, step_t))
+Y = np.zeros((N, step_t))
 
 # DEBUG SETTING
 logger = getLogger(__name__)
@@ -32,57 +34,48 @@ logger.setLevel(DEBUG)
 basicConfig(filename='console.log', level=DEBUG, filemode='w')
 np.set_printoptions(threshold=np.inf, suppress=True)
 
+
 # INSTANCE
-plot = Plot_Methods(path)
-local = Localization()
-l96 = Model_L96(N, F, dt, delta, plot)
+plot = Plot_Methods(path, title)
+local = Localization(N)
+l96 = Model_L96(N, F, dt, infration, plot)
 
-# 1. This process is conducted to simulate L96 for 2years
-logger.info('--- Start ---')
-logger.info('--- m=%d ---', len(m))
-logger.info('Prosess 1')
-Xt_2year = np.zeros((N, step_2year))
-Xt1_2year = float(F)*np.ones(N)
-Xt1_2year[20] = 1.001*F
-Xt_2year, t_2year = l96.analyze_model(Xt_2year, Xt1_2year, step_2year)
 
-# 2. This process is conducted to save the latter half of Xt_2year
-logger.info('Prosess 2')
-Xt = np.zeros((N, step_t))
-Xt = Xt_2year[:, step_t:step_2year]
+# PROCESS
+if __name__ == '__main__':
+    logger.info('--- PARAMETER ---')
+    logger.debug(" N : %d ", N)
+    logger.debug(" ensamble_size : %d ", ensamble_size)
+    logger.debug(f' infration: {infration:.0%}')
+    logger.debug(" spinup : %d day", (spinup/4))
+    logger.info('--- DEBUG ---')
 
-# 3. set seed of noise and add noise
-logger.info('Prosess 3')
-Y = np.zeros((N, step_t))
-np.random.seed(0)
-for i in range(step_t):
-    noise = np.random.normal(loc=mu, scale=sigma, size=N)
-    Y[:, i] = Xt[:, i] + noise
-np.random.seed(None)
+    #Process 1
+    start = time.time()
+    Xt1_2year[20] = 1.001*F
+    Xt_2year, t_2year = l96.analyze_model(Xt_2year, Xt1_2year, step_2year)
 
-# 4. ETKF
-logger.info('Prosess 4')
-Xa, Xa_mean, Pb = l96.ETKF(Y, m, step_t)
-Xa_RMSE = l96.RMSE(Xa_mean, Xt, step_t)
-Pb_trace = l96.Spread(Pb, step_t)
+    #Process 2
+    Xt = Xt_2year[:, step_t:step_2year]
+    
+    #Process 3
+    np.random.seed(0)
+    for i in range(step_t):
+        Y[:, i] = Xt[:, i] + np.random.normal(loc=0.0, scale=1.0, size=N)
+    np.random.seed(None)
 
-plot.FuncObTime(t_2year, Xt, Y, Xa_mean, str(len(m))+ "-ETKF")
-plot.AnalysisRMSEandTrace(t_2year[:], Xa_RMSE, Pb_trace, "-ETKF")
-plot.AnalysisErrCovariance(Pb, "-ETKF")
+    #Process 4
+    for i in tqdm.tqdm(range(len(L_sigmas))):
+        L = local.get_L(L_sigmas[i])
+        Xa, Xa_mean, Pb  = l96.LETKF(Y, ensamble_size, step_t, L)
+        Xa_RMSE = l96.RMSE(Xa_mean, Xt, step_t)
+        Xas_RMSE_mean.append(np.mean(Xa_RMSE[spinup:]))
+        logger.debug(" L_sigmas = %d, Xa_RMSE = %f", L_sigmas[i], Xas_RMSE_mean[i])
 
-logger.debug("Xa_RMSE:\n{}".format(Xa_RMSE[0:4]))# Debug
-"""
-# 5. LETKF
-logger.info('Prosess 5')
-for i in range(len(L_sigmas)):
-    L = local.get_L(L_sigmas[i])
-    plot.Debug(L, "Localization-" + str(L_sigmas[i]))
-    Xa, Xa_mean, Pb  = l96.LETKF(Y, m, step_t, L)
+        Pb_trace = l96.Spread(Pb, step_t)
+        #plot.AnalysisRMSEandTrace(t_2year[:], Xa_RMSE, Pb_trace, str(L_sigmas[i]))
 
-    Xa_RMSE = l96.RMSE(Xa_mean, Xt, step_t)
-    Pb_trace = l96.Spread(Pb, step_t)
-    plot.AnalysisRMSEandTrace(t_2year[:], Xa_RMSE, Pb_trace, "local-" + str(L_sigmas[i]))
-    plot.AnalysisErrCovariance(Pb, "local-" + str(L_sigmas[i]))
-    result.append(np.mean(Xa_RMSE[spinup:]))
-"""
-logger.info('--- End ---')
+    #Process 5
+    plot.TimeMeanRMSE(L_sigmas, Xas_RMSE_mean)
+    elapsed_time = time.time() - start
+    print ("elapsed_time:{0}".format(elapsed_time) + "[sec]")
