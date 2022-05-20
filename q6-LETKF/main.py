@@ -15,10 +15,10 @@ from localization import Localization
 N = 40
 F = 8.0
 dt = 0.05
-infration = 0.1
+infration = 0.05
 step_2year = 2920
 step_t = 1460  # 4step = 1day
-ensamble_size = 8
+ensamble_size = 20
 path = "./q6-LETKF/result/"
 title = "Lecture6-LETKF"
 L_sigmas = np.arange(1.0, 9, 2.0)

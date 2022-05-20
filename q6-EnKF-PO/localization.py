@@ -6,7 +6,6 @@ class Localization:
     def __init__(self, N):
         self.N = N
         self.L = np.zeros((N, N))
-        self.sigmas =  [1, 3, 5]
 
 
     # METHOD

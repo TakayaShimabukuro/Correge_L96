@@ -63,7 +63,6 @@ class Model_L96:
         return Xb, np.mean(Xb[:, t, :], axis=1)
 
     def analysis_Xa(self, Xb_mean, Xa, ZbT, t, ensamble_size):
-        #xb_mean_ens = (np.ones((ensamble_size, 1)) @ Xb_mean.reshape(1, -1)).T
         for i in range(ensamble_size):
             Xa[:, t, i] = Xb_mean + ZbT[:, i]
         return Xa, np.mean(Xa[:, t, :], axis=1)
@@ -101,8 +100,8 @@ class Model_L96:
         # t = 0
         Pb[:, :, 0] = np.diag([25]*self.N)
         for i in range(ensamble_size):
-            Xb[:, 0, i] = Y[:, i]+np.random.normal(loc=0.0, scale=1.0, size=self.N)
-            Xa[:, 0, i] = Y[:, i]+np.random.normal(loc=0.0, scale=1.0, size=self.N)
+            Xb[:, 0, i] = Y[:, i]+np.random.normal(loc=0.0, scale=1.0, size=self.N)*2
+            Xa[:, 0, i] = Y[:, i]+np.random.normal(loc=0.0, scale=1.0, size=self.N)*2
 
         # t > 0
         for t in tqdm.tqdm(range(1, step), leave=False):
@@ -113,21 +112,25 @@ class Model_L96:
             Pa_tilde, Pa_tilde_sqrt, R_loc_inv = self.calculate_Pa_tilda(Yb, L, I)
             d_ob = Y[:, t] - self.H @ Xb_mean[:, t]
             T = (Pa_tilde @ Yb.T @ R_loc_inv @ d_ob).reshape(-1, 1) @ one + \
-                np.sqrt(ensamble_size - 1) * Pa_tilde_sqrt
+                (np.sqrt(ensamble_size - 1) * Pa_tilde_sqrt)
             Xa, Xa_mean[:, t] = self.analysis_Xa(Xb_mean[:, t], Xa, Zb @ T, t, ensamble_size)
             
             Pb[:, :, t] = Zb@I@Zb.T
             '''
-            if t < 4:
+            if t %5 == 0:
+                logger.debug("Y:\n{}".format(Y[0:3, t]))
                 logger.debug("Xb:\n{}".format(Xb[0:3, t, 0]))
+                logger.debug("Xa:\n{}".format(Xa[0:3, t, 0]))
+                
                 logger.debug("Xb_mean:\n{}".format(Xb_mean[0:3, 0:3]))
                 logger.debug("Pa_tilde:\n{}".format(Pa_tilde[0:3, 0:3]))
                 logger.debug("Pa_tilde_sqrt:\n{}".format(Pa_tilde_sqrt[0:3, 0:3]))
                 logger.debug("d_ob:\n{}".format(d_ob[0:3]))
                 logger.debug("T:\n{}".format(T[0:3]))
-                logger.debug("Xa:\n{}".format(Xa[0:3, t, 0]))
+                
                 logger.debug("Xa_mean:\n{}".format(Xa_mean[0:3, 0:3]))
                 logger.debug("Pb:\n{}".format(Pb[0:3, 0:3, t]))
-            '''
+                '''
+            
         
         return Xa, Xa_mean, Pb
