@@ -15,13 +15,13 @@ from localization import Localization
 N = 40
 F = 8.0
 dt = 0.05
-infration = 0.03
+infration = 0.1
 step_2year = 2920
 step_t = 1460  # 4step = 1day
-ensamble_size = 20
+ensamble_size = 8
 path = "./q6-LETKF/result/"
 title = "Lecture6-LETKF"
-L_sigmas = np.arange(1.0, 16, 2.0)
+L_sigmas = np.arange(1.0, 9, 2.0)
 spinup = 80
 Xas_RMSE_mean = []
 Xt_2year = np.zeros((N, step_2year))
@@ -60,7 +60,7 @@ if __name__ == '__main__':
     Xt = Xt_2year[:, step_t:step_2year]
     
     #Process 3
-    np.random.seed(0)
+    np.random.seed(2)
     for i in tqdm.tqdm(range(step_t), leave=False):
         Y[:, i] = Xt[:, i] + np.random.normal(loc=0.0, scale=1.0, size=N)
     np.random.seed(None)

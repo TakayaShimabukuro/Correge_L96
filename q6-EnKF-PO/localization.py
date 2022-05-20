@@ -19,8 +19,6 @@ class Localization:
         for i in range(self.N):
             for j in range(self.N):
                 d = self.get_distance(i, j)
-                if 2*np.sqrt(10.0/(3.0*sigma)):
-                    self.L[i, j] = np.exp(-(d*d)/(2.0*sigma))
-                else:
-                    self.L[i, j] = 0.0
+                if d < 2 * np.sqrt(10/3) * sigma:
+                    self.L[i, j] = np.exp(-d * d * 0.5 / (sigma * sigma))
         return self.L

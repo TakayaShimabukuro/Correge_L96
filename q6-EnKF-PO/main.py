@@ -14,7 +14,7 @@ from localization import Localization
 N = 40
 F = 8.0
 dt = 0.05
-infration = 0.1
+infration = 0.05
 step_2year = 2920
 step_t = 1460  # 4step = 1day
 ensamble_size = 40
@@ -58,7 +58,7 @@ if __name__ == '__main__':
     Xt = Xt_2year[:, step_t:step_2year]
     
     #Process 3
-    np.random.seed(0)
+    np.random.seed(2)
     for i in range(step_t):
         Y[:, i] = Xt[:, i] + np.random.normal(loc=0.0, scale=1.0, size=N)
     np.random.seed(None)

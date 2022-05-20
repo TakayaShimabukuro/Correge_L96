@@ -7,12 +7,12 @@ logger = getLogger(__name__)
 
 class Model_L96:
     #PARAMETER
-    def __init__(self, N, F, dt, delta, plot):
+    def __init__(self, N, F, dt, inflation, plot):
         self.N = N
         self.F = F
         self.dt = dt
         self.plot = plot
-        self.delta = delta
+        self.inflation = inflation
         self.H = np.identity(self.N)
         self.R = np.identity(self.N)
 
@@ -63,9 +63,9 @@ class Model_L96:
         return Xb, np.mean(Xb[:, t, :], axis=1)
 
     def analysis_Xa(self, Xb_mean, Xa, ZbT, t, ensamble_size):
-        xb_mean_ens = (np.ones((ensamble_size, 1)) @ Xb_mean.reshape(1, -1)).T
+        #xb_mean_ens = (np.ones((ensamble_size, 1)) @ Xb_mean.reshape(1, -1)).T
         for i in range(ensamble_size):
-            Xa[:, t, i] = (xb_mean_ens + ZbT)[:, i]
+            Xa[:, t, i] = Xb_mean + ZbT[:, i]
         return Xa, np.mean(Xa[:, t, :], axis=1)
 
     def calculate_Zb(self, Xb, Xb_mean, t, ensamble_size):
@@ -84,7 +84,7 @@ class Model_L96:
         R_loc_inv = np.linalg.inv(self.R * L)
         Pa_tilde_inv = I + Yb.T @ R_loc_inv @ Yb
         D, lamda = np.linalg.eigh(Pa_tilde_inv)
-        return lamda@np.diag(1/D)@lamda.T, lamda@np.diag(np.sqrt(1/D))@lamda.T, R_loc_inv
+        return lamda@np.diag(1/D)@lamda.T, lamda@np.diag(1/np.sqrt(D))@lamda.T, R_loc_inv
 
     # LETKF
     def LETKF(self, Y, ensamble_size, step, L):
@@ -106,15 +106,15 @@ class Model_L96:
 
         # t > 0
         for t in tqdm.tqdm(range(1, step), leave=False):
-            Xb, Xb_mean[:, t] = self.analysis_Xb(Xb, Xa, t, ensamble_size)
-            Zb = self.calculate_Zb(Xb.copy(), Xb_mean[:, t], t, ensamble_size) * (1.0 + self.delta)
-            Yb = self.calculate_Yb(Zb.copy(), ensamble_size)
+            Xb, Xb_mean[:, t] = self.analysis_Xb(Xb, Xa, t, ensamble_size) 
+            Zb = self.calculate_Zb(Xb.copy(), Xb_mean[:, t], t, ensamble_size) * (1+self.inflation)
+            Yb = self.calculate_Yb(Zb, ensamble_size)
 
             Pa_tilde, Pa_tilde_sqrt, R_loc_inv = self.calculate_Pa_tilda(Yb, L, I)
-            d_ob = Y[:, t] - self.H@Xb_mean[:, t]
-            T = (Pa_tilde@Yb.T@R_loc_inv@d_ob).reshape(-1, 1) @ one + \
-                (np.sqrt(ensamble_size - 1) * Pa_tilde_sqrt)
-            Xa, Xa_mean[:, t] = self.analysis_Xa(Xb_mean[:, t], Xa, Zb@T, t, ensamble_size)
+            d_ob = Y[:, t] - self.H @ Xb_mean[:, t]
+            T = (Pa_tilde @ Yb.T @ R_loc_inv @ d_ob).reshape(-1, 1) @ one + \
+                np.sqrt(ensamble_size - 1) * Pa_tilde_sqrt
+            Xa, Xa_mean[:, t] = self.analysis_Xa(Xb_mean[:, t], Xa, Zb @ T, t, ensamble_size)
             
             Pb[:, :, t] = Zb@I@Zb.T
             '''
