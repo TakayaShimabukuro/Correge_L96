@@ -18,10 +18,10 @@ dt = 0.05
 infration = 0.05
 step_2year = 2920
 step_t = 1460  # 4step = 1day
-ensamble_size = 20
+ensamble_size = 16
 path = "./q6-LETKF/result/"
 title = "Lecture6-LETKF"
-L_sigmas = np.arange(1.0, 9, 2.0)
+L_sigmas = np.arange(1.0, 16, 2.0)
 spinup = 80
 Xas_RMSE_mean = []
 Xt_2year = np.zeros((N, step_2year))
@@ -74,7 +74,7 @@ if __name__ == '__main__':
         logger.debug(" L_sigmas = %d, Xa_RMSE = %f", L_sigmas[i], Xas_RMSE_mean[i])
 
         Pb_trace = l96.Spread(Pb, step_t)
-        plot.AnalysisRMSEandTrace(t_2year[:], Xa_RMSE, Pb_trace, str(L_sigmas[i]))
+        #plot.AnalysisRMSEandTrace(t_2year[:], Xa_RMSE, Pb_trace, str(L_sigmas[i]))
 
     #Process 5
     plot.TimeMeanRMSE(L_sigmas, Xas_RMSE_mean)

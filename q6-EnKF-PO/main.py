@@ -58,7 +58,7 @@ if __name__ == '__main__':
     Xt = Xt_2year[:, step_t:step_2year]
     
     #Process 3
-    np.random.seed(5)
+    np.random.seed(2)
     for i in range(step_t):
         Y[:, i] = Xt[:, i] + np.random.normal(loc=0.0, scale=1.0, size=N)
     np.random.seed(None)

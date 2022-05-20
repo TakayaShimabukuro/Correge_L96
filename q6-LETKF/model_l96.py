@@ -71,7 +71,7 @@ class Model_L96:
         dXb = np.zeros((self.N, ensamble_size))
         for i in range(ensamble_size):
             dXb[:, i] = (Xb[:, t, i]-Xb_mean)
-        return dXb / np.sqrt(ensamble_size-1)
+        return dXb  * (1+self.inflation) / np.sqrt(ensamble_size-1)
 
     def calculate_Yb(self, Zb, ensamble_size):
         Yb = np.zeros((self.N, ensamble_size))
@@ -79,11 +79,10 @@ class Model_L96:
             Yb[:, i] = self.H @ Zb[:, i]
         return Yb
         
-    def calculate_Pa_tilda(self, Yb, L, I):
-        R_loc_inv = np.linalg.inv(self.R * L)
+    def calculate_Pa_tilda(self, Yb, R_loc_inv, I):
         Pa_tilde_inv = I + Yb.T @ R_loc_inv @ Yb
         D, lamda = np.linalg.eigh(Pa_tilde_inv)
-        return lamda@np.diag(1/D)@lamda.T, lamda@np.diag(1/np.sqrt(D))@lamda.T, R_loc_inv
+        return lamda @ np.diag(1/D) @ lamda.T, lamda @ np.diag(1 / np.sqrt(D)) @ lamda.T
 
     # LETKF
     def LETKF(self, Y, ensamble_size, step, L):
@@ -100,16 +99,17 @@ class Model_L96:
         # t = 0
         Pb[:, :, 0] = np.diag([25]*self.N)
         for i in range(ensamble_size):
-            Xb[:, 0, i] = Y[:, i]+np.random.normal(loc=0.0, scale=1.0, size=self.N)*2
-            Xa[:, 0, i] = Y[:, i]+np.random.normal(loc=0.0, scale=1.0, size=self.N)*2
+            Xb[:, 0, i] = Y[:, i].copy() + np.random.normal(loc=0.0, scale=1.0, size=self.N) * 2
+            Xa[:, 0, i] = Y[:, i].copy()+  np.random.normal(loc=0.0, scale=1.0, size=self.N) * 2
 
         # t > 0
         for t in tqdm.tqdm(range(1, step), leave=False):
+            R_loc_inv = np.linalg.inv(self.R * L)
             Xb, Xb_mean[:, t] = self.analysis_Xb(Xb, Xa, t, ensamble_size) 
-            Zb = self.calculate_Zb(Xb.copy(), Xb_mean[:, t], t, ensamble_size) * (1+self.inflation)
+            Zb = self.calculate_Zb(Xb, Xb_mean[:, t], t, ensamble_size)
             Yb = self.calculate_Yb(Zb, ensamble_size)
 
-            Pa_tilde, Pa_tilde_sqrt, R_loc_inv = self.calculate_Pa_tilda(Yb, L, I)
+            Pa_tilde, Pa_tilde_sqrt = self.calculate_Pa_tilda(Yb, R_loc_inv, I)
             d_ob = Y[:, t] - self.H @ Xb_mean[:, t]
             T = (Pa_tilde @ Yb.T @ R_loc_inv @ d_ob).reshape(-1, 1) @ one + \
                 (np.sqrt(ensamble_size - 1) * Pa_tilde_sqrt)
