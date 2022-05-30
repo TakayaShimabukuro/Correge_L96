@@ -79,7 +79,23 @@ class Model_L96:
         Pa_tilde_inv = I + Yb.T @ R_loc_inv @ Yb
         D, lamda = np.linalg.eigh(Pa_tilde_inv)
         return lamda @ np.diag(1/D) @ lamda.T, lamda @ np.diag(1 / np.sqrt(D)) @ lamda.T
-
+    
+    def get_deleate_queue(self, delete_step):
+        deleate_queue = []
+        if delete_step == 1:
+            que = np.arange(0, 25, 5)
+            for i, data in enumerate(que):
+                deleate_queue.append(np.arange(0, data, delete_step))
+        
+        if delete_step >=2:
+            que = np.arange(15, 40, 5)
+            for i, data in enumerate(que):
+                sub_range = 5*i*delete_step
+                deleate_queue.append(np.arange(0, sub_range, delete_step))
+        
+        logger.debug(deleate_queue)
+        return deleate_queue
+        
     # LETKF
     def LETKF(self, Y, ensamble_size, step, sigma):
 

@@ -15,7 +15,7 @@ from localization import Localization
 N = 40
 F = 8.0
 dt = 0.05
-infration = 0.03
+infration = 0.05
 step_2year = 2920
 step_t = 1460  # 4step = 1day
 ensamble_size = 8
@@ -73,7 +73,7 @@ if __name__ == '__main__':
         logger.debug(" L_sigmas = %d, Xa_RMSE = %f", L_sigmas[i], Xas_RMSE_mean[i])
         
         Pb_trace = l96.Spread(Pb, step_t)
-        plot.AnalysisRMSEandTrace(t_2year[:], Xa_RMSE, Pb_trace, "local-" + str(L_sigmas[i]))
+        #plot.AnalysisRMSEandTrace(t_2year[:], Xa_RMSE, Pb_trace, "local-" + str(L_sigmas[i]))
 
     #Process 5
     plot.TimeMeanRMSE(L_sigmas, Xas_RMSE_mean)

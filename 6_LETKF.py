@@ -37,7 +37,7 @@ force = 8.0
 n = 40
 
 # number of observation
-n_obs = 40
+n_obs = 20
 
 ###############################################################
 # parameters for Ensemble Kalman Filter
@@ -141,6 +141,9 @@ def analysis_letkf(xb, y_o, h_obs_operator, ensemble_size, sigma, delta):
     zb = cal_zb(xb.copy(), xb_mean, ensemble_size) * delta
     # zb = cal_zb(xb.copy(), xb_mean, ensemble_size) * np.sqrt(delta)
     yb = h_obs_operator @ zb
+    print("---")
+    print(h_obs_operator.shape)
+    print(zb.shape)
     d_ob = y_o - obs_operator(h_obs_operator, xb_mean)
 
     xa = np.zeros_like(xb)
@@ -153,10 +156,7 @@ def analysis_letkf(xb, y_o, h_obs_operator, ensemble_size, sigma, delta):
         else:
             localization_func = np.ones(n_obs)
         r_local_inv = np.diag(np.ones(n_obs) * localization_func)
-        if(i < 2):
-            print(np.ones(n_obs)[0:5])
-            print(localization_func[0:5])
-            print(r_local_inv[0:5, 0:5])
+        
         # eigen value decomposition
         pa_tilde_inv = np.identity(ensemble_size) + yb.T @ r_local_inv @ yb
         eig_val, eig_vec = np.linalg.eigh(pa_tilde_inv)
