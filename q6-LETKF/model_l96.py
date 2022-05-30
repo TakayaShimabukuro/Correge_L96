@@ -2,6 +2,7 @@ from ctypes.wintypes import HACCEL
 import numpy as np
 from logging import getLogger, DEBUG, basicConfig
 import tqdm
+from localization import Localization
 logger = getLogger(__name__)
 
 
@@ -62,11 +63,6 @@ class Model_L96:
             Xb[:, t, i] = self.RK4(Xa[:, t-1, i])
         return Xb, np.mean(Xb[:, t, :], axis=1)
 
-    def analysis_Xa(self, Xb_mean, Xa, ZbT, t, ensamble_size):
-        for i in range(ensamble_size):
-            Xa[:, t, i] = Xb_mean + ZbT[:, i]
-        return Xa, np.mean(Xa[:, t, :], axis=1)
-
     def calculate_Zb(self, Xb, Xb_mean, t, ensamble_size):
         dXb = np.zeros((self.N, ensamble_size))
         for i in range(ensamble_size):
@@ -85,7 +81,7 @@ class Model_L96:
         return lamda @ np.diag(1/D) @ lamda.T, lamda @ np.diag(1 / np.sqrt(D)) @ lamda.T
 
     # LETKF
-    def LETKF(self, Y, ensamble_size, step, L):
+    def LETKF(self, Y, ensamble_size, step, sigma):
 
         # PARAMETER
         Xb = np.zeros(((self.N, step, ensamble_size)))
@@ -95,6 +91,7 @@ class Model_L96:
         Pb = np.zeros(((self.N, self.N, step)))
         one = np.ones((1, ensamble_size))
         I = np.identity(ensamble_size)
+        local = Localization(self.N)
         
         # t = 0
         Pb[:, :, 0] = np.diag([25]*self.N)
@@ -104,16 +101,21 @@ class Model_L96:
 
         # t > 0
         for t in tqdm.tqdm(range(1, step), leave=False):
-            R_loc_inv = np.linalg.inv(self.R * L)
-            Xb, Xb_mean[:, t] = self.analysis_Xb(Xb, Xa, t, ensamble_size) 
-            Zb = self.calculate_Zb(Xb, Xb_mean[:, t], t, ensamble_size)
+            Xb, Xb_mean = self.analysis_Xb(Xb, Xa, t, ensamble_size) 
+            xb_mean_ens = (np.ones((ensamble_size, 1)) @ Xb_mean.reshape(1, -1)).T
+            Zb = self.calculate_Zb(Xb, Xb_mean, t, ensamble_size)
             Yb = self.calculate_Yb(Zb, ensamble_size)
+            d_ob = Y[:, t] - self.H @ Xb_mean
 
-            Pa_tilde, Pa_tilde_sqrt = self.calculate_Pa_tilda(Yb, R_loc_inv, I)
-            d_ob = Y[:, t] - self.H @ Xb_mean[:, t]
-            T = (Pa_tilde @ Yb.T @ R_loc_inv @ d_ob).reshape(-1, 1) @ one + \
-                (np.sqrt(ensamble_size - 1) * Pa_tilde_sqrt)
-            Xa, Xa_mean[:, t] = self.analysis_Xa(Xb_mean[:, t], Xa, Zb @ T, t, ensamble_size)
+            for i in range(self.N):
+                L = local.get_L(sigma, self.H, i)
+                R_loc_inv = np.diag(np.ones(self.N) * L)
+                Pa_tilde, Pa_tilde_sqrt = self.calculate_Pa_tilda(Yb, R_loc_inv, I)
+                
+                T = (Pa_tilde @ Yb.T @ R_loc_inv @ d_ob).reshape(-1, 1) @ one + \
+                    (np.sqrt(ensamble_size - 1) * Pa_tilde_sqrt)
+                Xa[i, t, :] = (xb_mean_ens + (Zb @ T))[i, :]
+            Xa_mean[:, t] = np.mean(Xa[:, t, :], axis=1)
             
             Pb[:, :, t] = Zb@I@Zb.T
             '''
