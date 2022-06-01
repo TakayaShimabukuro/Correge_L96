@@ -80,8 +80,9 @@ if __name__ == '__main__':
 
         Xas_case.append(min(Xas_RMSE_mean))
     for j in tqdm.tqdm(range(len(delate_queue1))):
-        logger.debug(" RMSE MIN = %d", Xas_case[i])
+        logger.debug(" RMSE MIN = %d", Xas_case[j])
     #Process 5
     #plot.TimeMeanRMSE(L_sigmas, Xas_RMSE_mean)
+    plot.SensitivityTOObs(Xas_case)
     elapsed_time = time.time() - start
     print ("elapsed_time:{0}".format(elapsed_time) + "[sec]")

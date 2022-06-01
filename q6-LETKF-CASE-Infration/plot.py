@@ -82,7 +82,7 @@ class Plot_Methods:
         logger.info("------------------")
         logger.debug(RMSE[0:5, 0:5])
         X, Y = np.meshgrid(sigma, inf)
-        bounds = [0.3, 0.35, 0.375, 0.4, 0.425, 0.45, 0.475, 0.5, 1.0, 5.0]
+        bounds = [0.35, 0.375, 0.4, 0.425, 0.45, 0.475, 0.5, 1.0, 5.0]
         cmap = self.createCorlorMap("coolwarm", bounds)
         norm = BoundaryNorm(bounds,cmap.N)
         plt.contourf(X, Y, RMSE, cmap=cmap,norm=norm, vmin=min(bounds),vmax=max(bounds))

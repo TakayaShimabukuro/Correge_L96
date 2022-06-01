@@ -54,11 +54,9 @@ for inf in tqdm.tqdm(range(len(infration))):
         logger.debug(Xas_case.shape)
         logger.info('--- DEBUG ---')
 
-        delate_queue1 = l96.get_deleate_queue(2)
-        delate_queue2 = l96.get_deleate_queue(1)
-
-        #Process 1
+        delate_queue = l96.get_deleate_queue(2)# 2 = case1, 1 = case 2
         
+        #Process 1
         Xt1_2year[20] = 1.001*F
         Xt_2year, t_2year = l96.analyze_model(Xt_2year, Xt1_2year, step_2year)
 
@@ -66,19 +64,19 @@ for inf in tqdm.tqdm(range(len(infration))):
         Xt = Xt_2year[:, step_t:step_2year]
         
         #Process 3
-        np.random.seed(2)
+        np.random.seed(110)
         for i in tqdm.tqdm(range(step_t), leave=False):
             Y[:, i] = Xt[:, i] + np.random.normal(loc=0.0, scale=1.0, size=N)
         np.random.seed(None)
 
         #Process 4
         
-        for j in tqdm.tqdm(range(len(delate_queue1))):
-            p = 40 - len(delate_queue1[j])
+        for j in tqdm.tqdm(range(len(delate_queue))):
+            p = 40 - len(delate_queue[j])
             if(p == 20):
                 Xas_RMSE_mean = []
                 for i in tqdm.tqdm(range(len(L_sigmas)), leave=False):
-                    Xa, Xa_mean, Pb = l96.LETKF(Y, ensamble_size, step_t, L_sigmas[i], delate_queue1[j])
+                    Xa, Xa_mean, Pb = l96.LETKF(Y, ensamble_size, step_t, L_sigmas[i], delate_queue[j])
                     Xa_RMSE = l96.RMSE(Xa_mean, Xt, step_t)
                     Xas_RMSE_mean.append(np.mean(Xa_RMSE[spinup:]))
                     Xas_case[inf, i] = Xas_RMSE_mean[i]

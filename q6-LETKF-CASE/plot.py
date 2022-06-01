@@ -76,3 +76,21 @@ class Plot_Methods:
         plt.title(self.title)
         plt.savefig(self.path + "AnalysisRMSEandTrace/AnalysisRMSEandTrace-" + name + ".png")
         plt.close()
+
+
+    def SensitivityTOObs(self, LETKF):
+        self.make_file(self.path+"/SensitivityTOObs")
+        data_range = np.arange(15, 40, 5)
+        x_label = "Observations"
+        y_label = "best RMSE"
+        title = "Lecture5-3DVAR"
+        j = 0
+        plt.figure()
+        plt.plot(data_range, LETKF, marker="o",fillstyle='none', color="b", linestyle="dashed", lw=0.8, label="KF")
+        plt.grid(color='k', linestyle='dotted', linewidth=0.5)
+        plt.legend()
+        plt.xlabel(x_label)
+        plt.ylabel(y_label)
+        plt.title(title)
+        plt.savefig(self.path + "SensitivityTOObs/SensitivityTOObs.png")
+        plt.close()

@@ -3,8 +3,8 @@ import numpy as np
 from logging import getLogger, DEBUG, basicConfig
 import tqdm
 from localization import Localization
-logger = getLogger(__name__)
 
+logger = getLogger(__name__)
 
 class Model_L96:
     #PARAMETER
@@ -82,10 +82,12 @@ class Model_L96:
     
     def get_deleate_queue(self, delete_step):
         deleate_queue = []
+        
         if delete_step == 1:
-            que = np.arange(0, 25, 5)
+            que = np.arange(20, 40, 5)
             for i, data in enumerate(que):
-                deleate_queue.append(np.arange(0, data, delete_step))
+                deleate_queue.append(np.arange(20, data, delete_step))
+                logger.debug(deleate_queue[i])
         
         if delete_step >=2:
             que = np.arange(15, 40, 5)
@@ -94,7 +96,7 @@ class Model_L96:
                 deleate_queue.append(np.arange(0, sub_range, delete_step))
         
         return deleate_queue
-        
+
     # LETKF
     def LETKF(self, Y, ensamble_size, step, sigma, delate_queue):
 
